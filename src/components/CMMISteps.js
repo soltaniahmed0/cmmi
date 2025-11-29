@@ -1,0 +1,291 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaCheckCircle, FaLock, FaUser } from 'react-icons/fa';
+import './CMMISteps.css';
+
+const CMMISteps = () => {
+  const [currentLevel, setCurrentLevel] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showCongratulations, setShowCongratulations] = useState(false);
+
+  const levels = [
+    {
+      level: 1,
+      name: 'Initial',
+      description: 'Début du parcours',
+      color: '#ef4444',
+      icon: '🚀',
+      achievements: ['Processus informels', 'Dépendance aux individus'],
+      unlockMessage: 'Vous avez commencé votre parcours CMMI !'
+    },
+    {
+      level: 2,
+      name: 'Managed',
+      description: 'Premiers pas structurés',
+      color: '#f59e0b',
+      icon: '📋',
+      achievements: ['Processus documentés', 'Planification de projets'],
+      unlockMessage: 'Félicitations ! Vous avez atteint le niveau Managed !'
+    },
+    {
+      level: 3,
+      name: 'Defined',
+      description: 'Standardisation en cours',
+      color: '#3b82f6',
+      icon: '📐',
+      achievements: ['Processus standardisés', 'Formation organisée'],
+      unlockMessage: 'Excellent ! Le niveau Defined est atteint !'
+    },
+    {
+      level: 4,
+      name: 'Quantitatively Managed',
+      description: 'Maîtrise quantitative',
+      color: '#8b5cf6',
+      icon: '📊',
+      achievements: ['Mesures quantitatives', 'Prédiction statistique'],
+      unlockMessage: 'Impressionnant ! Vous maîtrisez la quantification !'
+    },
+    {
+      level: 5,
+      name: 'Optimizing',
+      description: 'Excellence atteinte',
+      color: '#10b981',
+      icon: '🏆',
+      achievements: ['Innovation continue', 'Optimisation des processus'],
+      unlockMessage: '🎉 EXCELLENCE ! Vous avez atteint le sommet du CMMI !'
+    }
+  ];
+
+  const handleNextLevel = () => {
+    if (currentLevel < levels.length - 1 && !isAnimating) {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentLevel(currentLevel + 1);
+        setIsAnimating(false);
+        if (currentLevel + 1 === levels.length - 1) {
+          setShowCongratulations(true);
+        }
+      }, 1500);
+    }
+  };
+
+  const handlePreviousLevel = () => {
+    if (currentLevel > 0 && !isAnimating) {
+      setCurrentLevel(currentLevel - 1);
+      setShowCongratulations(false);
+    }
+  };
+
+  const resetJourney = () => {
+    setCurrentLevel(0);
+    setShowCongratulations(false);
+  };
+
+  return (
+    <section id="steps" className="cmmi-steps">
+      <div className="container">
+        <div className="section-header">
+          <h2 className="section-title">Votre Parcours vers l'Excellence CMMI</h2>
+          <p className="section-description">
+            Montez l'escalier de la qualité logicielle et découvrez chaque niveau de maturité CMMI.
+            Chaque étape vous rapproche de l'excellence professionnelle.
+          </p>
+        </div>
+
+        <div className="steps-container">
+          {/* Person character */}
+          <div className="character-container">
+            <motion.div
+              className="character"
+              animate={{
+                bottom: `${20 + currentLevel * 180}px`,
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 1.5,
+                ease: "easeInOut"
+              }}
+            >
+              <FaUser className="character-icon" />
+              <div className="character-name">Vous</div>
+            </motion.div>
+          </div>
+
+          {/* Stairs */}
+          <div className="stairs-container">
+            {levels.map((level, index) => {
+              const isReached = index <= currentLevel;
+              const isCurrent = index === currentLevel;
+              
+              return (
+                <motion.div
+                  key={level.level}
+                  className={`step ${isReached ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}`}
+                  style={{ 
+                    borderColor: isReached ? level.color : '#4a5568',
+                    backgroundColor: isReached ? `${level.color}20` : 'rgba(74, 85, 104, 0.1)'
+                  }}
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ 
+                    opacity: 1, 
+                    x: 0,
+                    boxShadow: isCurrent 
+                      ? `0 0 30px ${level.color}80` 
+                      : isReached 
+                        ? `0 5px 20px ${level.color}40` 
+                        : 'none'
+                  }}
+                  transition={{ delay: index * 0.1, duration: 0.6 }}
+                  onClick={() => {
+                    if (isReached) {
+                      setCurrentLevel(index);
+                    }
+                  }}
+                >
+                  <div className="step-content">
+                    <div className="step-icon">{level.icon}</div>
+                    <div className="step-number">Niveau {level.level}</div>
+                    <div className="step-name">{level.name}</div>
+                    {isReached ? (
+                      <FaCheckCircle className="check-icon" style={{ color: level.color }} />
+                    ) : (
+                      <FaLock className="lock-icon" />
+                    )}
+                  </div>
+                  
+                  {isCurrent && (
+                    <motion.div
+                      className="current-level-info"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <h4>Niveau Actuel</h4>
+                      <p>{level.description}</p>
+                      <div className="achievements-list">
+                        {level.achievements.map((achievement, idx) => (
+                          <div key={idx} className="achievement-item">
+                            <span>✓</span> {achievement}
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Control buttons */}
+          <div className="steps-controls">
+            <button
+              className="control-btn prev-btn"
+              onClick={handlePreviousLevel}
+              disabled={currentLevel === 0 || isAnimating}
+            >
+              ⬅ Niveau Précédent
+            </button>
+            <button
+              className="control-btn next-btn"
+              onClick={handleNextLevel}
+              disabled={currentLevel === levels.length - 1 || isAnimating}
+              style={{
+                background: currentLevel < levels.length - 1 
+                  ? `linear-gradient(135deg, ${levels[currentLevel + 1].color}, ${levels[currentLevel + 1].color}dd)`
+                  : undefined
+              }}
+            >
+              {isAnimating ? '⏳ En cours...' : currentLevel < levels.length - 1 ? 'Niveau Suivant ➡' : '🎉 Terminé !'}
+            </button>
+            <button
+              className="control-btn reset-btn"
+              onClick={resetJourney}
+              disabled={isAnimating}
+            >
+              🔄 Recommencer
+            </button>
+          </div>
+
+          {/* Level unlock message */}
+          <AnimatePresence>
+            {currentLevel > 0 && (
+              <motion.div
+                className="unlock-message"
+                initial={{ opacity: 0, scale: 0.8, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: -50 }}
+                style={{ 
+                  borderColor: levels[currentLevel].color,
+                  background: `linear-gradient(135deg, ${levels[currentLevel].color}20, ${levels[currentLevel].color}10)`
+                }}
+              >
+                <div className="unlock-icon">{levels[currentLevel].icon}</div>
+                <h3>{levels[currentLevel].unlockMessage}</h3>
+                <p>Vous êtes maintenant au niveau <strong>{levels[currentLevel].name}</strong></p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Final congratulations */}
+          <AnimatePresence>
+            {showCongratulations && (
+              <motion.div
+                className="congratulations-modal"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+              >
+                <div className="congrats-content">
+                  <div className="congrats-icon">🏆</div>
+                  <h2>Félicitations !</h2>
+                  <p>Vous avez complété votre parcours CMMI et atteint le niveau d'excellence !</p>
+                  <div className="congrats-achievements">
+                    <div className="achievement-badge">✓ Maîtrise Complète</div>
+                    <div className="achievement-badge">✓ Expert CMMI</div>
+                    <div className="achievement-badge">✓ Excellence Atteinte</div>
+                  </div>
+                  <button 
+                    className="congrats-close-btn"
+                    onClick={() => setShowCongratulations(false)}
+                  >
+                    Continuer
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Progress bar */}
+        <div className="progress-section">
+          <div className="progress-header">
+            <h3>Progression Globale</h3>
+            <span className="progress-percentage">
+              {Math.round((currentLevel + 1) / levels.length * 100)}%
+            </span>
+          </div>
+          <div className="progress-bar">
+            <motion.div
+              className="progress-fill"
+              initial={{ width: '20%' }}
+              animate={{ 
+                width: `${((currentLevel + 1) / levels.length) * 100}%`,
+                background: `linear-gradient(90deg, ${levels[Math.min(currentLevel, levels.length - 1)].color}, ${levels[Math.min(currentLevel + 1, levels.length - 1)]?.color || levels[currentLevel].color})`
+              }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+            />
+          </div>
+          <p className="progress-text">
+            {currentLevel === levels.length - 1 
+              ? '🎉 Parcours complété ! Vous êtes un expert CMMI !'
+              : `Prochain objectif : Atteindre le niveau ${levels[currentLevel + 1]?.name || 'Final'}`
+            }
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default CMMISteps;
+

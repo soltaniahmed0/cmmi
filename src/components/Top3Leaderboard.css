@@ -1,0 +1,216 @@
+.top3-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2500;
+  padding: 20px;
+}
+
+.top3-content {
+  background: linear-gradient(135deg, #1a1f3a 0%, #0a0e27 100%);
+  border: 3px solid rgba(59, 130, 246, 0.5);
+  border-radius: 25px;
+  padding: 3rem;
+  max-width: 600px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+}
+
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #ffffff;
+  font-size: 2rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: rotate(90deg);
+}
+
+.top3-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.top3-header h2 {
+  font-size: 2.5rem;
+  color: #ffffff;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.view-toggle button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: #a0aec0;
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.view-toggle button.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #3b82f6;
+  color: white;
+}
+
+.top3-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.top3-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.top3-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(10px);
+}
+
+.top3-item.position-1 {
+  border-color: #fbbf24;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(251, 191, 36, 0.1) 100%);
+  box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3);
+}
+
+.top3-item.position-2 {
+  border-color: #9ca3af;
+  background: linear-gradient(135deg, rgba(156, 163, 175, 0.2) 0%, rgba(156, 163, 175, 0.1) 100%);
+  box-shadow: 0 10px 30px rgba(156, 163, 175, 0.3);
+}
+
+.top3-item.position-3 {
+  border-color: #d97706;
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%);
+  box-shadow: 0 10px 30px rgba(217, 119, 6, 0.3);
+}
+
+.medal-icon {
+  font-size: 3rem;
+  min-width: 60px;
+}
+
+.player-info {
+  flex: 1;
+}
+
+.player-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+}
+
+.player-score {
+  color: #a0aec0;
+  font-size: 1rem;
+}
+
+.position-badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.no-scores {
+  text-align: center;
+  padding: 3rem;
+  color: #a0aec0;
+}
+
+.no-scores p {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.no-scores .hint {
+  font-size: 1rem;
+  color: #718096;
+  font-style: italic;
+}
+
+.close-modal-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.close-modal-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+}
+
+@media (max-width: 768px) {
+  .top3-content {
+    padding: 2rem 1.5rem;
+  }
+
+  .top3-header h2 {
+    font-size: 2rem;
+  }
+
+  .medal-icon {
+    font-size: 2rem;
+    min-width: 40px;
+  }
+
+  .player-name {
+    font-size: 1.25rem;
+  }
+}
+

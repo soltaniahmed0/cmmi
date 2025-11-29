@@ -1,0 +1,18 @@
+.App {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0e27 0%, #1a1f3a 100%);
+}
+
+/* Section spacing */
+section {
+  padding: 80px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  section {
+    padding: 60px 20px;
+  }
+}
+

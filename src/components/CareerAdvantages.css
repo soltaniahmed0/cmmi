@@ -1,0 +1,220 @@
+.career-advantages {
+  padding: 100px 20px;
+  background: linear-gradient(180deg, #0a0e27 0%, #1a1f3a 100%);
+}
+
+.advantages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 5rem;
+}
+
+.advantage-card {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 20px;
+  padding: 2.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.advantage-card:hover {
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow: 0 15px 40px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+}
+
+.advantage-icon {
+  font-size: 3.5rem;
+  color: #3b82f6;
+  margin-bottom: 1.5rem;
+}
+
+.advantage-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.advantage-description {
+  color: #a0aec0;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.advantage-stat {
+  display: inline-block;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.salary-comparison {
+  margin-top: 4rem;
+}
+
+.comparison-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 3rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.comparison-table {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.salary-row {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 15px;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 2rem;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.salary-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(10px);
+}
+
+.role-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.salary-values {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.salary-without,
+.salary-with {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.salary-label {
+  font-size: 0.85rem;
+  color: #a0aec0;
+}
+
+.salary-amount {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.salary-amount.highlight {
+  color: #10b981;
+}
+
+.salary-arrow {
+  font-size: 1.5rem;
+  color: #3b82f6;
+  font-weight: bold;
+}
+
+.salary-diff {
+  margin-left: auto;
+}
+
+.diff-badge {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.testimonial-box {
+  margin-top: 4rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 20px;
+  padding: 3rem;
+  text-align: center;
+  position: relative;
+}
+
+.quote-icon {
+  font-size: 5rem;
+  color: rgba(59, 130, 246, 0.5);
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.testimonial-text {
+  font-size: 1.25rem;
+  color: #d1d5db;
+  line-height: 1.8;
+  font-style: italic;
+  margin-bottom: 2rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.testimonial-author {
+  color: #a0aec0;
+  font-size: 1.1rem;
+}
+
+.testimonial-author strong {
+  color: #ffffff;
+}
+
+@media (max-width: 968px) {
+  .salary-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .salary-values {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .salary-arrow {
+    transform: rotate(90deg);
+  }
+
+  .salary-diff {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .advantages-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-title {
+    font-size: 2rem;
+  }
+}
+
