@@ -17,6 +17,26 @@ body {
   /* Mobile optimizations */
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  /* Prevent text selection on tap for better UX */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection in input fields and content areas */
+input,
+textarea,
+[contenteditable],
+p,
+span,
+div[role="textbox"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Better mobile scrolling */
+* {
+  -webkit-overflow-scrolling: touch;
 }
 
 code {

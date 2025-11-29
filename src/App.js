@@ -5,11 +5,11 @@ import AdminPanel from './components/AdminPanel';
 import GamesHero from './components/GamesHero';
 import ProgressTracker from './components/ProgressTracker';
 import CMMISteps from './components/CMMISteps';
-import InteractiveActivities from './components/InteractiveActivities';
-import MemoryGame from './components/MemoryGame';
-import ProcessDragDrop from './components/ProcessDragDrop';
-import TrueFalseGame from './components/TrueFalseGame';
-import OrderLevelsGame from './components/OrderLevelsGame';
+import Level1Initial from './components/Level1Initial';
+import Level2Managed from './components/Level2Managed';
+import Level3Defined from './components/Level3Defined';
+import Level4QuantitativelyManaged from './components/Level4QuantitativelyManaged';
+import Level5Optimizing from './components/Level5Optimizing';
 import Footer from './components/Footer';
 import { getPlayerName } from './utils/scoreManager';
 import './App.css';
@@ -42,11 +42,11 @@ function App() {
           <GamesHero />
           <ProgressTracker />
           <CMMISteps />
-          <InteractiveActivities />
-          <MemoryGame />
-          <ProcessDragDrop />
-          <TrueFalseGame />
-          <OrderLevelsGame />
+          <Level1Initial />
+          <Level2Managed />
+          <Level3Defined />
+          <Level4QuantitativelyManaged />
+          <Level5Optimizing />
         </>
       )}
       <Footer />

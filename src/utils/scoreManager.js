@@ -16,6 +16,9 @@ export const saveScore = (playerName, gameName, score, maxScore, timeSpent = 0) 
   scores.push(newScore);
   localStorage.setItem('cmmi_scores', JSON.stringify(scores));
   
+  // Émettre un événement personnalisé pour la mise à jour en temps réel
+  window.dispatchEvent(new Event('scoreUpdated'));
+  
   return newScore;
 };
 

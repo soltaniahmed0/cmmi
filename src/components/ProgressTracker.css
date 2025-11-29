@@ -274,30 +274,81 @@
 
 @media (max-width: 768px) {
   .progress-tracker {
-    padding: 60px 15px;
+    padding: 60px 12px;
   }
 
   .mastery-card {
-    padding: 1.5rem;
+    padding: 1.5rem 1.25rem;
   }
 
   .mastery-header {
     flex-direction: column;
     text-align: center;
-    gap: 1rem;
+    gap: 0.875rem;
   }
 
   .games-list {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
   .game-progress-card {
     flex-direction: column;
     text-align: center;
+    padding: 1.25rem;
+    gap: 1rem;
   }
 
   .game-icon {
     min-width: auto;
+    font-size: 2rem;
+  }
+
+  .game-info h4 {
+    font-size: 1.1rem;
+  }
+
+  .game-info p {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .progress-tracker {
+    padding: 50px 10px;
+  }
+
+  .mastery-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .mastery-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .mastery-header p {
+    font-size: 0.875rem;
+  }
+
+  .game-progress-card {
+    padding: 1rem;
+    gap: 0.875rem;
+  }
+
+  .game-icon {
+    font-size: 1.75rem;
+  }
+
+  .game-info h4 {
+    font-size: 1rem;
+  }
+
+  .game-info p {
+    font-size: 0.8rem;
+  }
+
+  .game-requirements {
+    font-size: 0.75rem;
   }
 }
 

@@ -196,12 +196,91 @@
 }
 
 @media (max-width: 768px) {
+  .top3-modal {
+    padding: 20px 15px;
+    align-items: flex-start;
+    padding-top: 60px;
+  }
+
   .top3-content {
     padding: 2rem 1.5rem;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .close-btn {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 44px;
+    height: 44px;
+    font-size: 1.75rem;
   }
 
   .top3-header h2 {
-    font-size: 2rem;
+    font-size: 1.75rem;
+    margin-bottom: 0.875rem;
+  }
+
+  .view-toggle {
+    gap: 0.75rem;
+  }
+
+  .view-toggle button {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    min-height: 44px;
+  }
+
+  .top3-list {
+    gap: 1.25rem;
+  }
+
+  .top3-item {
+    padding: 1.25rem 1rem;
+  }
+
+  .medal-icon {
+    font-size: 2.5rem;
+    min-width: 50px;
+  }
+
+  .player-name {
+    font-size: 1.25rem;
+  }
+
+  .player-score {
+    font-size: 0.95rem;
+  }
+
+  .close-modal-btn {
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    min-height: 52px;
+  }
+}
+
+@media (max-width: 480px) {
+  .top3-modal {
+    padding: 15px 12px;
+    padding-top: 50px;
+  }
+
+  .top3-content {
+    padding: 1.75rem 1.25rem;
+    max-height: calc(100vh - 70px);
+  }
+
+  .top3-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .top3-item {
+    padding: 1rem 0.875rem;
+    flex-wrap: wrap;
+    gap: 1rem;
   }
 
   .medal-icon {
@@ -210,7 +289,13 @@
   }
 
   .player-name {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
+  }
+
+  .close-modal-btn {
+    padding: 0.875rem 1.25rem;
+    font-size: 1rem;
+    min-height: 50px;
   }
 }
 

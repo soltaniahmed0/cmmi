@@ -6,50 +6,55 @@ export const CMMI_LEVELS = {
   1: {
     name: 'Initial',
     color: '#ef4444',
-    game: 'Quiz CMMI',
+    game: 'Niveau 1: Initial',
     required: 70,
-    description: 'Comprenez les bases du CMMI'
+    description: 'Comprenez les bases du CMMI',
+    totalQuestions: 7
   },
   2: {
     name: 'Managed',
     color: '#f59e0b',
-    game: 'Jeu de Mémoire',
-    required: 6,
-    description: 'Mémorisez les concepts clés',
-    prerequisite: 1
+    game: 'Niveau 2: Managed',
+    required: 100,
+    description: 'Gérez les projets efficacement',
+    prerequisite: 1,
+    totalProjects: 3
   },
   3: {
     name: 'Defined',
     color: '#3b82f6',
-    game: 'Drag & Drop Processus',
-    required: 10,
-    description: 'Classez les processus par niveau',
-    prerequisite: 2
+    game: 'Niveau 3: Defined',
+    required: 100,
+    description: 'Standardisez les processus',
+    prerequisite: 2,
+    totalStandards: 8
   },
   4: {
     name: 'Quantitatively Managed',
     color: '#8b5cf6',
-    game: 'TrueFalse',
+    game: 'Niveau 4: Quantitatively Managed',
     required: 80,
-    description: 'Testez votre compréhension avancée',
-    prerequisite: 3
+    description: 'Mesurez quantitativement',
+    prerequisite: 3,
+    totalQuestions: 6
   },
   5: {
     name: 'Optimizing',
     color: '#10b981',
-    game: 'OrderLevels',
+    game: 'Niveau 5: Optimizing',
     required: 100,
-    description: 'Maîtrisez l\'ordre des niveaux',
-    prerequisite: 4
+    description: 'Améliorez continuellement',
+    prerequisite: 4,
+    totalProblems: 5
   }
 };
 
 export const GAME_TO_LEVEL = {
-  'Quiz CMMI': 1,
-  'Jeu de Mémoire': 2,
-  'Drag & Drop Processus': 3,
-  'TrueFalse': 4,
-  'OrderLevels': 5
+  'Niveau 1: Initial': 1,
+  'Niveau 2: Managed': 2,
+  'Niveau 3: Defined': 3,
+  'Niveau 4: Quantitatively Managed': 4,
+  'Niveau 5: Optimizing': 5
 };
 
 export const getPlayerCMMILevel = (playerName) => {
@@ -58,7 +63,7 @@ export const getPlayerCMMILevel = (playerName) => {
   const scores = getScores();
   const playerScores = scores.filter(s => s.playerName === playerName);
   
-  // Vérifier chaque niveau dans l'ordre
+  // Vérifier chaque niveau dans l'ordre - maintenant on vérifie juste si le jeu a été joué
   for (let level = 1; level <= 5; level++) {
     const levelInfo = CMMI_LEVELS[level];
     const gameScores = playerScores.filter(s => s.gameName === levelInfo.game);
@@ -67,28 +72,8 @@ export const getPlayerCMMILevel = (playerName) => {
       // Aucun score pour ce niveau, retourner le niveau précédent
       return level - 1;
     }
-    
-    // Vérifier si le joueur a atteint le score requis
-    const bestScore = gameScores.sort((a, b) => b.percentage - a.percentage)[0];
-    const requiredPercentage = levelInfo.required;
-    
-    // Pour les jeux avec un score absolu (Mémoire, Drag & Drop)
-    if (level === 2) {
-      // Jeu de Mémoire : required = nombre de paires
-      if (bestScore.score < requiredPercentage) {
-        return level - 1;
-      }
-    } else if (level === 3) {
-      // Drag & Drop : required = nombre de processus corrects
-      if (bestScore.score < requiredPercentage) {
-        return level - 1;
-      }
-    } else {
-      // Pourcentage pour les autres jeux
-      if (bestScore.percentage < requiredPercentage) {
-        return level - 1;
-      }
-    }
+    // Si le joueur a joué au jeu, il peut passer au suivant (même avec 0%)
+    // Pas de vérification de score requis
   }
   
   // Tous les niveaux complétés
@@ -102,8 +87,15 @@ export const isGameLocked = (gameName, playerName = null) => {
   const level = GAME_TO_LEVEL[gameName];
   if (!level || level === 1) return false; // Le premier jeu n'est jamais verrouillé
   
-  const currentLevel = getPlayerCMMILevel(currentPlayerName);
-  return currentLevel < level - 1; // Verrouillé si le niveau précédent n'est pas atteint
+  // Vérifier si le niveau précédent a été joué (même avec 0% de score)
+  const previousLevel = level - 1;
+  const previousGame = CMMI_LEVELS[previousLevel].game;
+  const scores = getScores();
+  const playerScores = scores.filter(s => s.playerName === currentPlayerName);
+  const previousGamePlayed = playerScores.some(s => s.gameName === previousGame);
+  
+  // Le jeu est verrouillé seulement si le niveau précédent n'a pas été joué
+  return !previousGamePlayed;
 };
 
 export const canAccessGame = (gameName, playerName = null) => {
@@ -112,11 +104,11 @@ export const canAccessGame = (gameName, playerName = null) => {
 
 export const getGameSectionId = (gameName) => {
   const sectionMap = {
-    'Quiz CMMI': 'activities',
-    'Jeu de Mémoire': 'memory-game',
-    'Drag & Drop Processus': 'drag-drop',
-    'TrueFalse': 'truefalse',
-    'OrderLevels': 'order-levels'
+    'Niveau 1: Initial': 'level1-initial',
+    'Niveau 2: Managed': 'level2-managed',
+    'Niveau 3: Defined': 'level3-defined',
+    'Niveau 4: Quantitatively Managed': 'level4-quantitatively-managed',
+    'Niveau 5: Optimizing': 'level5-optimizing'
   };
   return sectionMap[gameName] || '';
 };

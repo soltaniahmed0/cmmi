@@ -4,6 +4,7 @@ import './Header.css';
 
 const Header = ({ onAdminClick }) => {
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,8 +18,37 @@ const Header = ({ onAdminClick }) => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+      setMenuOpen(false);
     }
   };
+
+  const handleAdminClick = () => {
+    if (onAdminClick) {
+      onAdminClick();
+      setMenuOpen(false);
+    }
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuOpen && !e.target.closest('.header-container')) {
+        setMenuOpen(false);
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener('click', handleClickOutside);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      document.body.style.overflow = '';
+    };
+  }, [menuOpen]);
 
   return (
     <motion.header
@@ -32,16 +62,26 @@ const Header = ({ onAdminClick }) => {
           <span className="logo-icon">🎯</span>
           <span className="logo-text">CMMI Games</span>
         </div>
-        <nav className="nav">
-          <button onClick={() => scrollToSection('progress')}>📈 Progression</button>
-          <button onClick={() => scrollToSection('steps')}>🪜 Escalier</button>
-          <button onClick={() => scrollToSection('activities')}>🎯 Quiz</button>
-          <button onClick={() => scrollToSection('memory-game')}>🎴 Mémoire</button>
-          <button onClick={() => scrollToSection('drag-drop')}>🎲 Processus</button>
+        <button 
+          className={`menu-toggle ${menuOpen ? 'active' : ''}`}
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle menu"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <nav className={`nav ${menuOpen ? 'active' : ''}`}>
+          <button onClick={() => scrollToSection('progress')}>📊 Progression</button>
+          <button onClick={() => scrollToSection('level1-initial')}>🔴 Niveau 1: Initial</button>
+          <button onClick={() => scrollToSection('level2-managed')}>🟠 Niveau 2: Managed</button>
+          <button onClick={() => scrollToSection('level3-defined')}>🔵 Niveau 3: Defined</button>
+          <button onClick={() => scrollToSection('level4-quantitatively-managed')}>🟣 Niveau 4: Quantitatively Managed</button>
+          <button onClick={() => scrollToSection('level5-optimizing')}>🟢 Niveau 5: Optimizing</button>
           {onAdminClick && (
             <button 
               className="admin-btn" 
-              onClick={onAdminClick}
+              onClick={handleAdminClick}
               title="Accès Admin"
             >
               🔐 Admin

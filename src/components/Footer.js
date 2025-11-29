@@ -22,9 +22,11 @@ const Footer = () => {
             <h4 className="footer-title">Jeux</h4>
             <ul className="footer-links">
               <li><a href="#steps">Escalier CMMI</a></li>
-              <li><a href="#activities">Quiz Interactif</a></li>
-              <li><a href="#memory-game">Jeu de Mémoire</a></li>
-              <li><a href="#drag-drop">Drag & Drop</a></li>
+              <li><a href="#level1-initial">Niveau 1: Initial</a></li>
+              <li><a href="#level2-managed">Niveau 2: Managed</a></li>
+              <li><a href="#level3-defined">Niveau 3: Defined</a></li>
+              <li><a href="#level4-quantitatively-managed">Niveau 4: Quantitatively Managed</a></li>
+              <li><a href="#level5-optimizing">Niveau 5: Optimizing</a></li>
             </ul>
           </div>
 

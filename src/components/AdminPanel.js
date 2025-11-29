@@ -12,17 +12,64 @@ const AdminPanel = ({ onClose }) => {
   const [allScores, setAllScores] = useState([]);
   const [overallRanking, setOverallRanking] = useState([]);
   const [activeTab, setActiveTab] = useState('overall');
+  const [lastUpdateTime, setLastUpdateTime] = useState(Date.now());
+  const [newScoresCount, setNewScoresCount] = useState(0);
 
   const ADMIN_PASSWORD = 'admin123'; // Simple password for demo
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadData();
+      // Écouter les événements de mise à jour des scores en temps réel
+      const handleScoreUpdate = () => {
+        setAllScores(prevScores => {
+          const previousScoresCount = prevScores.length;
+          const newScores = getScores();
+          
+          const ranking = getOverallRanking();
+          // Add CMMI level to each player
+          const rankingWithLevel = ranking.map(player => ({
+            ...player,
+            cmmiLevel: getPlayerCMMILevel(player.playerName),
+            cmmiLevelName: getPlayerCMMILevel(player.playerName) > 0 
+              ? `Niveau ${getPlayerCMMILevel(player.playerName)}: ${CMMI_LEVELS[getPlayerCMMILevel(player.playerName)].name}`
+              : 'Aucun niveau'
+          }));
+          setOverallRanking(rankingWithLevel);
+          
+          // Détecter les nouveaux scores
+          if (newScores.length > previousScoresCount) {
+            setNewScoresCount(newScores.length - previousScoresCount);
+            setLastUpdateTime(Date.now());
+            // Réinitialiser le compteur après 3 secondes
+            setTimeout(() => setNewScoresCount(0), 3000);
+          }
+          
+          return newScores;
+        });
+      };
+      
+      // Charger les données initiales
+      handleScoreUpdate();
+      
+      window.addEventListener('scoreUpdated', handleScoreUpdate);
+      window.addEventListener('storage', handleScoreUpdate); // Pour les changements de localStorage dans d'autres onglets
+      
+      // Vérifier les changements toutes les secondes pour la mise à jour en temps réel
+      const interval = setInterval(handleScoreUpdate, 1000);
+      
+      return () => {
+        window.removeEventListener('scoreUpdated', handleScoreUpdate);
+        window.removeEventListener('storage', handleScoreUpdate);
+        clearInterval(interval);
+      };
     }
   }, [isAuthenticated]);
 
   const loadData = () => {
-    setAllScores(getScores());
+    const previousScoresCount = allScores.length;
+    const newScores = getScores();
+    setAllScores(newScores);
+    
     const ranking = getOverallRanking();
     // Add CMMI level to each player
     const rankingWithLevel = ranking.map(player => ({
@@ -33,6 +80,14 @@ const AdminPanel = ({ onClose }) => {
         : 'Aucun niveau'
     }));
     setOverallRanking(rankingWithLevel);
+    
+    // Détecter les nouveaux scores
+    if (newScores.length > previousScoresCount) {
+      setNewScoresCount(newScores.length - previousScoresCount);
+      setLastUpdateTime(Date.now());
+      // Réinitialiser le compteur après 3 secondes
+      setTimeout(() => setNewScoresCount(0), 3000);
+    }
   };
 
   const handleLogin = (e) => {
@@ -105,7 +160,23 @@ const AdminPanel = ({ onClose }) => {
         <div className="admin-header">
           <div className="admin-title">
             <FaChartBar className="admin-icon" />
-            <h2>Panneau d'Administration</h2>
+            <div>
+              <h2>Panneau d'Administration</h2>
+              <div className="real-time-indicator">
+                <span className={`live-dot ${newScoresCount > 0 ? 'pulsing' : ''}`}></span>
+                <span>Mise à jour en temps réel</span>
+                {newScoresCount > 0 && (
+                  <motion.span
+                    className="new-scores-badge"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                  >
+                    +{newScoresCount} nouveau{newScoresCount > 1 ? 'x' : ''} score{newScoresCount > 1 ? 's' : ''}
+                  </motion.span>
+                )}
+              </div>
+            </div>
           </div>
           <button className="admin-logout-btn" onClick={handleLogout}>
             Déconnexion
@@ -200,9 +271,11 @@ const AdminPanel = ({ onClose }) => {
                     <motion.div
                       key={score.id}
                       className="score-item"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
                       transition={{ delay: index * 0.02 }}
+                      layout
+                      whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
                     >
                       <div className="score-player">{score.playerName}</div>
                       <div className="score-game">{score.gameName}</div>

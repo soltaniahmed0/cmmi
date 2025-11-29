@@ -58,15 +58,33 @@ const GamesHero = () => {
             </button>
             <button
               className="btn-secondary"
-              onClick={() => scrollToSection('activities')}
+              onClick={() => scrollToSection('level1-initial')}
             >
-              🎯 Quiz
+              🔴 Niveau 1
             </button>
             <button
               className="btn-secondary"
-              onClick={() => scrollToSection('memory-game')}
+              onClick={() => scrollToSection('level2-managed')}
             >
-              🎴 Mémoire
+              🟠 Niveau 2
+            </button>
+            <button
+              className="btn-secondary"
+              onClick={() => scrollToSection('level3-defined')}
+            >
+              🔵 Niveau 3
+            </button>
+            <button
+              className="btn-secondary"
+              onClick={() => scrollToSection('level4-quantitatively-managed')}
+            >
+              🟣 Niveau 4
+            </button>
+            <button
+              className="btn-secondary"
+              onClick={() => scrollToSection('level5-optimizing')}
+            >
+              🟢 Niveau 5
             </button>
           </motion.div>
         </motion.div>

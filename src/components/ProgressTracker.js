@@ -104,10 +104,10 @@ const ProgressTracker = () => {
           className="mastery-card"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          style={{ borderColor: currentCMMILevel > 0 ? CMMI_LEVELS[currentCMMILevel].color : undefined }}
+          style={{ borderColor: currentCMMILevel > 0 ? CMMI_LEVELS[currentCMMILevel].color : '#4a5568' }}
         >
           <div className="mastery-header">
-            <FaTrophy className="trophy-icon" style={{ color: currentCMMILevel > 0 ? CMMI_LEVELS[currentCMMILevel].color : undefined }} />
+            <FaTrophy className="trophy-icon" style={{ color: currentCMMILevel > 0 ? CMMI_LEVELS[currentCMMILevel].color : '#a0aec0' }} />
             <div>
               <h3>Niveau CMMI Atteint</h3>
               <p>
@@ -127,15 +127,15 @@ const ProgressTracker = () => {
               style={{ 
                 background: currentCMMILevel > 0 
                   ? `linear-gradient(90deg, ${CMMI_LEVELS[currentCMMILevel].color} 0%, ${CMMI_LEVELS[Math.min(currentCMMILevel + 1, 5)].color} 100%)`
-                  : undefined
+                  : 'linear-gradient(90deg, #4a5568 0%, #718096 100%)'
               }}
             >
               <span className="mastery-percentage">{masteryLevel}%</span>
             </motion.div>
           </div>
           <div className="mastery-level-badge" style={{ 
-            backgroundColor: currentCMMILevel > 0 ? `${CMMI_LEVELS[currentCMMILevel].color}20` : undefined,
-            borderColor: currentCMMILevel > 0 ? CMMI_LEVELS[currentCMMILevel].color : undefined
+            backgroundColor: currentCMMILevel > 0 ? `${CMMI_LEVELS[currentCMMILevel].color}20` : 'rgba(74, 85, 104, 0.2)',
+            borderColor: currentCMMILevel > 0 ? CMMI_LEVELS[currentCMMILevel].color : '#4a5568'
           }}>
             {currentCMMILevel === 5 ? '🏆 Niveau 5: Optimizing - Expert CMMI' :
              currentCMMILevel === 4 ? '⭐ Niveau 4: Quantitatively Managed' :
@@ -166,7 +166,7 @@ const ProgressTracker = () => {
                   transition={{ delay: index * 0.1 }}
                   onClick={() => {
                     if (isLocked) {
-                      alert(`🔒 Cette étape est verrouillée. Vous devez d'abord compléter le Niveau ${game.level - 1}: ${prerequisite?.levelInfo?.name || ''} avec ${prerequisite?.required || 0}${prerequisite?.level === 2 || prerequisite?.level === 3 ? '' : '%'} ou plus.`);
+                      alert(`🔒 Cette étape est verrouillée. Vous devez d'abord compléter le Niveau ${game.level - 1}: ${prerequisite?.levelInfo?.name || ''}.`);
                       return;
                     }
                     const sectionId = game.section || game.id.toLowerCase().replace(/\s+/g, '-');

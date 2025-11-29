@@ -6,7 +6,6 @@ import './CMMISteps.css';
 const CMMISteps = () => {
   const [currentLevel, setCurrentLevel] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [showCongratulations, setShowCongratulations] = useState(false);
 
   const levels = [
     {
@@ -52,7 +51,7 @@ const CMMISteps = () => {
       color: '#10b981',
       icon: '🏆',
       achievements: ['Innovation continue', 'Optimisation des processus'],
-      unlockMessage: '🎉 EXCELLENCE ! Vous avez atteint le sommet du CMMI !'
+      unlockMessage: 'Félicitations ! Vous avez atteint le niveau Optimizing !'
     }
   ];
 
@@ -62,23 +61,18 @@ const CMMISteps = () => {
       setTimeout(() => {
         setCurrentLevel(currentLevel + 1);
         setIsAnimating(false);
-        if (currentLevel + 1 === levels.length - 1) {
-          setShowCongratulations(true);
-        }
-      }, 1500);
+      }, 2000); // Animation plus douce et plus longue
     }
   };
 
   const handlePreviousLevel = () => {
     if (currentLevel > 0 && !isAnimating) {
       setCurrentLevel(currentLevel - 1);
-      setShowCongratulations(false);
     }
   };
 
   const resetJourney = () => {
     setCurrentLevel(0);
-    setShowCongratulations(false);
   };
 
   return (
@@ -93,21 +87,57 @@ const CMMISteps = () => {
         </div>
 
         <div className="steps-container">
-          {/* Person character */}
+          {/* Person character with smooth climbing animation */}
           <div className="character-container">
             <motion.div
               className="character"
               animate={{
                 bottom: `${20 + currentLevel * 180}px`,
-                scale: [1, 1.2, 1],
+                scale: [1, 1.15, 1],
+                y: [0, -10, 0],
               }}
               transition={{
-                duration: 1.5,
-                ease: "easeInOut"
+                duration: 2,
+                ease: [0.4, 0, 0.2, 1], // Smooth cubic-bezier
+                repeat: Infinity,
+                repeatType: "reverse"
               }}
             >
-              <FaUser className="character-icon" />
-              <div className="character-name">Vous</div>
+              <motion.div
+                className="character-avatar"
+                animate={{
+                  rotateY: [0, 10, -10, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <FaUser className="character-icon" />
+              </motion.div>
+              <motion.div 
+                className="character-name"
+                animate={{
+                  opacity: [0.7, 1, 0.7],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity
+                }}
+              >
+                Vous
+              </motion.div>
+              {currentLevel > 0 && (
+                <motion.div
+                  className="progress-sparkles"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                >
+                  ✨
+                </motion.div>
+              )}
             </motion.div>
           </div>
 
@@ -125,17 +155,38 @@ const CMMISteps = () => {
                     borderColor: isReached ? level.color : '#4a5568',
                     backgroundColor: isReached ? `${level.color}20` : 'rgba(74, 85, 104, 0.1)'
                   }}
-                  initial={{ opacity: 0, x: -50 }}
+                  initial={{ opacity: 0, x: -50, y: 20 }}
                   animate={{ 
                     opacity: 1, 
                     x: 0,
+                    y: isCurrent ? [-5, 5, -5] : 0,
                     boxShadow: isCurrent 
-                      ? `0 0 30px ${level.color}80` 
+                      ? `0 0 40px ${level.color}80` 
                       : isReached 
                         ? `0 5px 20px ${level.color}40` 
-                        : 'none'
+                        : 'none',
+                    scale: isCurrent ? [1, 1.02, 1] : 1
                   }}
-                  transition={{ delay: index * 0.1, duration: 0.6 }}
+                  transition={{ 
+                    delay: index * 0.1, 
+                    duration: 0.8,
+                    ease: [0.4, 0, 0.2, 1],
+                    y: {
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    },
+                    scale: {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }
+                  }}
+                  whileHover={isReached ? {
+                    scale: 1.05,
+                    y: -5,
+                    boxShadow: `0 10px 30px ${level.color}60`
+                  } : {}}
                   onClick={() => {
                     if (isReached) {
                       setCurrentLevel(index);
@@ -185,10 +236,12 @@ const CMMISteps = () => {
             >
               ⬅ Niveau Précédent
             </button>
-            <button
+            <motion.button
               className="control-btn next-btn"
               onClick={handleNextLevel}
               disabled={currentLevel === levels.length - 1 || isAnimating}
+              whileHover={!isAnimating && currentLevel < levels.length - 1 ? { scale: 1.05, y: -2 } : {}}
+              whileTap={!isAnimating ? { scale: 0.95 } : {}}
               style={{
                 background: currentLevel < levels.length - 1 
                   ? `linear-gradient(135deg, ${levels[currentLevel + 1].color}, ${levels[currentLevel + 1].color}dd)`
@@ -196,7 +249,7 @@ const CMMISteps = () => {
               }}
             >
               {isAnimating ? '⏳ En cours...' : currentLevel < levels.length - 1 ? 'Niveau Suivant ➡' : '🎉 Terminé !'}
-            </button>
+            </motion.button>
             <button
               className="control-btn reset-btn"
               onClick={resetJourney}
@@ -206,54 +259,7 @@ const CMMISteps = () => {
             </button>
           </div>
 
-          {/* Level unlock message */}
-          <AnimatePresence>
-            {currentLevel > 0 && (
-              <motion.div
-                className="unlock-message"
-                initial={{ opacity: 0, scale: 0.8, y: 50 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: -50 }}
-                style={{ 
-                  borderColor: levels[currentLevel].color,
-                  background: `linear-gradient(135deg, ${levels[currentLevel].color}20, ${levels[currentLevel].color}10)`
-                }}
-              >
-                <div className="unlock-icon">{levels[currentLevel].icon}</div>
-                <h3>{levels[currentLevel].unlockMessage}</h3>
-                <p>Vous êtes maintenant au niveau <strong>{levels[currentLevel].name}</strong></p>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
-          {/* Final congratulations */}
-          <AnimatePresence>
-            {showCongratulations && (
-              <motion.div
-                className="congratulations-modal"
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.5 }}
-              >
-                <div className="congrats-content">
-                  <div className="congrats-icon">🏆</div>
-                  <h2>Félicitations !</h2>
-                  <p>Vous avez complété votre parcours CMMI et atteint le niveau d'excellence !</p>
-                  <div className="congrats-achievements">
-                    <div className="achievement-badge">✓ Maîtrise Complète</div>
-                    <div className="achievement-badge">✓ Expert CMMI</div>
-                    <div className="achievement-badge">✓ Excellence Atteinte</div>
-                  </div>
-                  <button 
-                    className="congrats-close-btn"
-                    onClick={() => setShowCongratulations(false)}
-                  >
-                    Continuer
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
         {/* Progress bar */}

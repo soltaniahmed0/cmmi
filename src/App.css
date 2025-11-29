@@ -12,7 +12,13 @@ section {
 
 @media (max-width: 768px) {
   section {
-    padding: 60px 20px;
+    padding: 80px 15px 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  section {
+    padding: 70px 12px 50px;
   }
 }
 
