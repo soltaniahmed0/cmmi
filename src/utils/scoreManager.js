@@ -464,3 +464,71 @@ export const getAllUsers = async () => {
   }
 };
 
+// Écouter les changements en temps réel pour les utilisateurs
+export const subscribeToUsers = (callback) => {
+  // Si Firestore n'est pas configuré, utiliser localStorage avec polling
+  if (!isFirestoreConfigured()) {
+    const handleUpdate = () => {
+      const users = JSON.parse(localStorage.getItem('cmmi_users') || '[]');
+      callback(users);
+    };
+    
+    window.addEventListener('userRegistered', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    
+    // Initial call
+    handleUpdate();
+    
+    // Polling pour les autres onglets
+    const interval = setInterval(handleUpdate, 2000);
+    
+    return () => {
+      window.removeEventListener('userRegistered', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+      clearInterval(interval);
+    };
+  }
+
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('createdAt', 'desc'));
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const users = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toISOString() : doc.data().createdAt,
+        lastActive: doc.data().lastActive?.toDate ? doc.data().lastActive.toDate().toISOString() : doc.data().lastActive
+      }));
+      callback(users);
+    }, (error) => {
+      console.error('Erreur lors de l\'écoute des utilisateurs:', error);
+      // Fallback sur localStorage
+      const users = JSON.parse(localStorage.getItem('cmmi_users') || '[]');
+      callback(users);
+    });
+
+    return unsubscribe;
+  } catch (error) {
+    console.error('Erreur lors de la souscription aux utilisateurs:', error);
+    // Fallback sur localStorage avec polling
+    const handleUpdate = () => {
+      const users = JSON.parse(localStorage.getItem('cmmi_users') || '[]');
+      callback(users);
+    };
+    
+    window.addEventListener('userRegistered', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    
+    handleUpdate();
+    
+    const interval = setInterval(handleUpdate, 2000);
+    
+    return () => {
+      window.removeEventListener('userRegistered', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+      clearInterval(interval);
+    };
+  }
+};
+

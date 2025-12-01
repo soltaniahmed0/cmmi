@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaMedal, FaAward, FaLock, FaUsers, FaChartBar } from 'react-icons/fa';
-import { getOverallRanking, clearAllScores, subscribeToScores, getAllUsers } from '../utils/scoreManager';
+import { getOverallRanking, clearAllScores, subscribeToScores, subscribeToUsers } from '../utils/scoreManager';
 import { getPlayerCMMILevel, CMMI_LEVELS } from '../utils/gameLock';
 import Top3Leaderboard from './Top3Leaderboard';
 import './AdminPanel.css';
@@ -24,7 +24,7 @@ const AdminPanel = ({ onClose }) => {
   useEffect(() => {
     if (isAuthenticated) {
       // Utiliser subscribeToScores pour les mises à jour en temps réel depuis Firestore
-      const unsubscribe = subscribeToScores((newScores) => {
+      const unsubscribeScores = subscribeToScores((newScores) => {
         setAllScores(prevScores => {
           const previousScoresCount = prevScores.length;
           
@@ -58,33 +58,16 @@ const AdminPanel = ({ onClose }) => {
         }).catch(err => {
           console.error('Erreur lors de la mise à jour du classement:', err);
         });
+      });
 
-        // Charger tous les utilisateurs (même ceux sans scores)
-        getAllUsers().then(users => {
-          setAllUsers(users);
-        }).catch(err => {
-          console.error('Erreur lors de la récupération des utilisateurs:', err);
-        });
+      // Utiliser subscribeToUsers pour les mises à jour en temps réel des utilisateurs
+      const unsubscribeUsers = subscribeToUsers((users) => {
+        setAllUsers(users);
       });
       
       return () => {
-        if (unsubscribe) unsubscribe();
-      };
-    }
-  }, [isAuthenticated]);
-
-  // Écouter les nouveaux utilisateurs enregistrés
-  useEffect(() => {
-    if (isAuthenticated) {
-      const handleUserRegistered = () => {
-        getAllUsers().then(users => {
-          setAllUsers(users);
-        });
-      };
-
-      window.addEventListener('userRegistered', handleUserRegistered);
-      return () => {
-        window.removeEventListener('userRegistered', handleUserRegistered);
+        if (unsubscribeScores) unsubscribeScores();
+        if (unsubscribeUsers) unsubscribeUsers();
       };
     }
   }, [isAuthenticated]);
