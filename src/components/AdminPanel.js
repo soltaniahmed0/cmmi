@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaMedal, FaAward, FaLock, FaUsers, FaChartBar } from 'react-icons/fa';
-import { getOverallRanking, clearAllScores, subscribeToScores, subscribeToUsers } from '../utils/scoreManager';
+import { getOverallRanking, clearAllScores, subscribeToScores, subscribeToUsers, getScores } from '../utils/scoreManager';
 import { getPlayerCMMILevel, CMMI_LEVELS } from '../utils/gameLock';
 import Top3Leaderboard from './Top3Leaderboard';
 import './AdminPanel.css';
