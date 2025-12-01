@@ -565,3 +565,58 @@ export const subscribeToUsers = (callback) => {
   }
 };
 
+// Supprimer un utilisateur
+export const deleteUser = async (userId, playerName) => {
+  // Supprimer de Firestore si configuré
+  if (isFirestoreConfigured()) {
+    try {
+      // Supprimer l'utilisateur de la collection users
+      const userRef = doc(db, 'users', userId);
+      await deleteDoc(userRef);
+      
+      // Supprimer aussi tous ses scores
+      const scores = await getScores();
+      const userScores = scores.filter(s => s.playerName === playerName);
+      
+      if (userScores.length > 0) {
+        const batch = writeBatch(db);
+        userScores.forEach(score => {
+          const scoreRef = doc(db, 'scores', score.id);
+          batch.delete(scoreRef);
+        });
+        await batch.commit();
+      }
+      
+      // Émettre des événements pour la mise à jour
+      window.dispatchEvent(new Event('userRegistered'));
+      window.dispatchEvent(new Event('scoreUpdated'));
+      
+      return true;
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+      throw error;
+    }
+  }
+  
+  // Supprimer de localStorage
+  try {
+    const users = JSON.parse(localStorage.getItem('cmmi_users') || '[]');
+    const filteredUsers = users.filter(u => u.id !== userId && u.playerName !== playerName);
+    localStorage.setItem('cmmi_users', JSON.stringify(filteredUsers));
+    
+    // Supprimer aussi les scores de cet utilisateur
+    const scores = JSON.parse(localStorage.getItem('cmmi_scores') || '[]');
+    const filteredScores = scores.filter(s => s.playerName !== playerName);
+    localStorage.setItem('cmmi_scores', JSON.stringify(filteredScores));
+    
+    // Émettre des événements
+    window.dispatchEvent(new Event('userRegistered'));
+    window.dispatchEvent(new Event('scoreUpdated'));
+    
+    return true;
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+    throw error;
+  }
+};
+
