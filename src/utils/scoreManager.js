@@ -16,11 +16,6 @@ import { db } from '../config/firebase';
 
 // Vérifier si Firestore est configuré (pas les valeurs par défaut)
 const isFirestoreConfigured = () => {
-  // Vérifier que db est initialisé
-  if (!db) {
-    return false;
-  }
-  
   const config = process.env;
   return config.REACT_APP_FIREBASE_PROJECT_ID && 
          config.REACT_APP_FIREBASE_PROJECT_ID !== 'your-project-id' &&
@@ -63,14 +58,13 @@ export const saveScore = async (playerName, gameName, score, maxScore, timeSpent
 
   try {
     // S'assurer que l'utilisateur existe dans la collection users
-    // Récupérer tous les utilisateurs sans orderBy pour éviter les problèmes d'index
     const usersRef = collection(db, 'users');
-    const querySnapshot = await getDocs(usersRef);
+    const q = query(usersRef, orderBy('playerName'));
+    const querySnapshot = await getDocs(q);
     
-    const existingUser = querySnapshot.docs.find(doc => {
-      const data = doc.data();
-      return data.playerName && data.playerName.toLowerCase() === playerName.toLowerCase();
-    });
+    const existingUser = querySnapshot.docs.find(doc => 
+      doc.data().playerName.toLowerCase() === playerName.toLowerCase()
+    );
 
     // Si l'utilisateur n'existe pas, le créer automatiquement
     if (!existingUser) {
@@ -109,18 +103,8 @@ export const saveScore = async (playerName, gameName, score, maxScore, timeSpent
 
     const docRef = await addDoc(collection(db, 'scores'), newScore);
     
-    // Sauvegarder aussi dans localStorage pour la session locale
-    const localScores = getScoresLocalStorage();
-    localScores.push({
-      id: docRef.id,
-      ...newScore,
-      date: newScore.date.toDate().toISOString()
-    });
-    localStorage.setItem('cmmi_scores', JSON.stringify(localScores));
-    
-    // Émettre un événement pour la mise à jour locale (important pour déverrouiller les niveaux)
+    // Émettre un événement pour la mise à jour locale
     window.dispatchEvent(new Event('scoreUpdated'));
-    window.dispatchEvent(new Event('storage'));
     
     return {
       id: docRef.id,
@@ -141,22 +125,15 @@ export const getScores = async () => {
   }
 
   try {
-    // Récupérer tous les scores sans orderBy pour éviter les problèmes d'index
     const scoresRef = collection(db, 'scores');
-    const querySnapshot = await getDocs(scoresRef);
+    const q = query(scoresRef, orderBy('date', 'desc'));
+    const querySnapshot = await getDocs(q);
     
-    const scores = querySnapshot.docs.map(doc => ({
+    return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       date: doc.data().date?.toDate ? doc.data().date.toDate().toISOString() : doc.data().date
     }));
-    
-    // Trier côté client par date (descendant)
-    return scores.sort((a, b) => {
-      const dateA = new Date(a.date || 0);
-      const dateB = new Date(b.date || 0);
-      return dateB - dateA;
-    });
   } catch (error) {
     console.error('Erreur lors de la récupération des scores depuis Firestore:', error);
     // Fallback sur localStorage en cas d'erreur
@@ -166,8 +143,8 @@ export const getScores = async () => {
 
 // Écouter les changements en temps réel (pour AdminPanel)
 export const subscribeToScores = (callback) => {
-  // Si Firestore n'est pas configuré ou db n'est pas initialisé, utiliser localStorage avec polling
-  if (!isFirestoreConfigured() || !db) {
+  // Si Firestore n'est pas configuré, utiliser localStorage avec polling
+  if (!isFirestoreConfigured()) {
     const handleUpdate = () => {
       callback(getScoresLocalStorage());
     };
@@ -189,24 +166,16 @@ export const subscribeToScores = (callback) => {
   }
 
   try {
-    // Récupérer tous les scores sans orderBy pour éviter les problèmes d'index
     const scoresRef = collection(db, 'scores');
+    const q = query(scoresRef, orderBy('date', 'desc'));
     
-    const unsubscribe = onSnapshot(scoresRef, (querySnapshot) => {
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const scores = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         date: doc.data().date?.toDate ? doc.data().date.toDate().toISOString() : doc.data().date
       }));
-      
-      // Trier côté client par date (descendant)
-      const sortedScores = scores.sort((a, b) => {
-        const dateA = new Date(a.date || 0);
-        const dateB = new Date(b.date || 0);
-        return dateB - dateA;
-      });
-      
-      callback(sortedScores);
+      callback(scores);
     }, (error) => {
       console.error('Erreur lors de l\'écoute des scores:', error);
       // Fallback sur localStorage
@@ -357,9 +326,9 @@ export const checkPlayerNameExists = async (playerName) => {
   }
 
   try {
-    // Récupérer tous les utilisateurs sans orderBy pour éviter les problèmes d'index
     const usersRef = collection(db, 'users');
-    const querySnapshot = await getDocs(usersRef);
+    const q = query(usersRef, orderBy('playerName'));
+    const querySnapshot = await getDocs(q);
     
     return querySnapshot.docs.some(doc => 
       doc.data().playerName.toLowerCase() === playerName.trim().toLowerCase()
@@ -415,20 +384,14 @@ export const registerPlayer = async (playerName) => {
   }
 
   try {
-    // Vérifier que db est bien initialisé
-    if (!db) {
-      throw new Error('Firestore database is not initialized');
-    }
-
     // Vérifier si l'utilisateur existe déjà dans Firestore
-    // On récupère tous les utilisateurs sans orderBy pour éviter les problèmes d'index
     const usersRef = collection(db, 'users');
-    const querySnapshot = await getDocs(usersRef);
+    const q = query(usersRef, orderBy('playerName'));
+    const querySnapshot = await getDocs(q);
     
-    const existingUserDoc = querySnapshot.docs.find(doc => {
-      const data = doc.data();
-      return data.playerName && data.playerName.toLowerCase() === trimmedName.toLowerCase();
-    });
+    const existingUserDoc = querySnapshot.docs.find(doc => 
+      doc.data().playerName.toLowerCase() === trimmedName.toLowerCase()
+    );
 
     // Si l'utilisateur existe ET ce n'est pas le même utilisateur actuel, rejeter
     if (existingUserDoc && currentLocalName !== trimmedName) {
@@ -457,11 +420,6 @@ export const registerPlayer = async (playerName) => {
       lastActive: Timestamp.now()
     };
 
-    // Vérifier que db est bien initialisé
-    if (!db) {
-      throw new Error('Firestore database is not initialized. Please check your Firebase configuration.');
-    }
-
     const docRef = await addDoc(collection(db, 'users'), newUser);
     
     // Sauvegarder aussi dans localStorage pour la session
@@ -487,48 +445,6 @@ export const registerPlayer = async (playerName) => {
     };
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', error);
-    
-    // Si erreur de permissions ou autre erreur Firestore, utiliser localStorage comme fallback
-    if (error.code === 'permission-denied' || 
-        error.code === 'unavailable' || 
-        error.message?.includes('permission') ||
-        error.message?.includes('Firestore')) {
-      console.warn('Firestore non disponible, utilisation de localStorage comme fallback');
-      
-      // Utiliser localStorage comme fallback
-      const users = JSON.parse(localStorage.getItem('cmmi_users') || '[]');
-      
-      // Vérifier si l'utilisateur existe déjà
-      const existingUser = users.find(u => u.playerName.toLowerCase() === trimmedName.toLowerCase());
-      
-      // Si l'utilisateur existe ET ce n'est pas le même utilisateur actuel, rejeter
-      if (existingUser && currentLocalName !== trimmedName) {
-        throw new Error('Ce nom est déjà utilisé. Veuillez choisir un autre nom.');
-      }
-
-      // Si c'est le même utilisateur, juste mettre à jour
-      if (existingUser && currentLocalName === trimmedName) {
-        existingUser.lastActive = new Date().toISOString();
-        localStorage.setItem('cmmi_users', JSON.stringify(users));
-        return existingUser;
-      }
-
-      // Nouvel utilisateur
-      const newUser = {
-        id: Date.now(),
-        playerName: trimmedName,
-        createdAt: new Date().toISOString(),
-        lastActive: new Date().toISOString()
-      };
-
-      users.push(newUser);
-      localStorage.setItem('cmmi_users', JSON.stringify(users));
-      localStorage.setItem('cmmi_player_name', trimmedName);
-      window.dispatchEvent(new Event('userRegistered'));
-      return newUser;
-    }
-    
-    // Pour les autres erreurs, relancer
     throw error;
   }
 };
@@ -564,23 +480,16 @@ export const getAllUsers = async () => {
   }
 
   try {
-    // Récupérer tous les utilisateurs et trier côté client pour éviter les problèmes d'index
     const usersRef = collection(db, 'users');
-    const querySnapshot = await getDocs(usersRef);
+    const q = query(usersRef, orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
     
-    const users = querySnapshot.docs.map(doc => ({
+    return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toISOString() : doc.data().createdAt,
       lastActive: doc.data().lastActive?.toDate ? doc.data().lastActive.toDate().toISOString() : doc.data().lastActive
     }));
-    
-    // Trier côté client par date de création (descendant)
-    return users.sort((a, b) => {
-      const dateA = new Date(a.createdAt || 0);
-      const dateB = new Date(b.createdAt || 0);
-      return dateB - dateA;
-    });
   } catch (error) {
     console.error('Erreur lors de la récupération des utilisateurs:', error);
     // Fallback sur localStorage
@@ -615,23 +524,16 @@ export const subscribeToUsers = (callback) => {
 
   try {
     const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('createdAt', 'desc'));
     
-    const unsubscribe = onSnapshot(usersRef, (querySnapshot) => {
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const users = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toISOString() : doc.data().createdAt,
         lastActive: doc.data().lastActive?.toDate ? doc.data().lastActive.toDate().toISOString() : doc.data().lastActive
       }));
-      
-      // Trier côté client par date de création (descendant)
-      const sortedUsers = users.sort((a, b) => {
-        const dateA = new Date(a.createdAt || 0);
-        const dateB = new Date(b.createdAt || 0);
-        return dateB - dateA;
-      });
-      
-      callback(sortedUsers);
+      callback(users);
     }, (error) => {
       console.error('Erreur lors de l\'écoute des utilisateurs:', error);
       // Fallback sur localStorage
@@ -660,61 +562,6 @@ export const subscribeToUsers = (callback) => {
       window.removeEventListener('storage', handleUpdate);
       clearInterval(interval);
     };
-  }
-};
-
-// Supprimer un utilisateur
-export const deleteUser = async (userId, playerName) => {
-  // Supprimer de Firestore si configuré
-  if (isFirestoreConfigured()) {
-    try {
-      // Supprimer l'utilisateur de la collection users
-      const userRef = doc(db, 'users', userId);
-      await deleteDoc(userRef);
-      
-      // Supprimer aussi tous ses scores
-      const scores = await getScores();
-      const userScores = scores.filter(s => s.playerName === playerName);
-      
-      if (userScores.length > 0) {
-        const batch = writeBatch(db);
-        userScores.forEach(score => {
-          const scoreRef = doc(db, 'scores', score.id);
-          batch.delete(scoreRef);
-        });
-        await batch.commit();
-      }
-      
-      // Émettre des événements pour la mise à jour
-      window.dispatchEvent(new Event('userRegistered'));
-      window.dispatchEvent(new Event('scoreUpdated'));
-      
-      return true;
-    } catch (error) {
-      console.error('Erreur lors de la suppression de l\'utilisateur:', error);
-      throw error;
-    }
-  }
-  
-  // Supprimer de localStorage
-  try {
-    const users = JSON.parse(localStorage.getItem('cmmi_users') || '[]');
-    const filteredUsers = users.filter(u => u.id !== userId && u.playerName !== playerName);
-    localStorage.setItem('cmmi_users', JSON.stringify(filteredUsers));
-    
-    // Supprimer aussi les scores de cet utilisateur
-    const scores = JSON.parse(localStorage.getItem('cmmi_scores') || '[]');
-    const filteredScores = scores.filter(s => s.playerName !== playerName);
-    localStorage.setItem('cmmi_scores', JSON.stringify(filteredScores));
-    
-    // Émettre des événements
-    window.dispatchEvent(new Event('userRegistered'));
-    window.dispatchEvent(new Event('scoreUpdated'));
-    
-    return true;
-  } catch (error) {
-    console.error('Erreur lors de la suppression de l\'utilisateur:', error);
-    throw error;
   }
 };
 
