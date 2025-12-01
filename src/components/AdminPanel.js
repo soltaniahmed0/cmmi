@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaMedal, FaAward, FaLock, FaUsers, FaChartBar } from 'react-icons/fa';
-import { getOverallRanking, clearAllScores, subscribeToScores, subscribeToUsers, getScores } from '../utils/scoreManager';
+import { getOverallRanking, clearAllScores, subscribeToScores, subscribeToUsers, getScores, deleteUser } from '../utils/scoreManager';
 import { getPlayerCMMILevel, CMMI_LEVELS } from '../utils/gameLock';
 import Top3Leaderboard from './Top3Leaderboard';
 import './AdminPanel.css';
@@ -325,6 +325,21 @@ const AdminPanel = ({ onClose }) => {
                         <div className="user-date">
                           Inscrit le: {new Date(user.createdAt || Date.now()).toLocaleDateString('fr-FR')}
                         </div>
+                        <button
+                          className="delete-user-btn"
+                          onClick={async () => {
+                            if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur "${user.playerName}" ?\n\nTous ses scores seront également supprimés.`)) {
+                              try {
+                                await deleteUser(user.id || user.playerName, user.playerName);
+                              } catch (error) {
+                                alert('Erreur lors de la suppression de l\'utilisateur');
+                              }
+                            }
+                          }}
+                          title="Supprimer cet utilisateur"
+                        >
+                          🗑️ Supprimer
+                        </button>
                       </div>
                     </motion.div>
                   );

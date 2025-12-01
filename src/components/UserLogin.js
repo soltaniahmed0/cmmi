@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaUser, FaPlay, FaExclamationTriangle } from 'react-icons/fa';
-import { savePlayerName, getPlayerName } from '../utils/scoreManager';
+import { savePlayerName, getPlayerName, checkPlayerNameExists } from '../utils/scoreManager';
 import './UserLogin.css';
 
 const UserLogin = ({ onLogin }) => {
@@ -11,12 +11,22 @@ const UserLogin = ({ onLogin }) => {
   const [isChecking, setIsChecking] = useState(false);
 
   useEffect(() => {
-    const savedName = getPlayerName();
-    if (savedName) {
-      setPlayerName(savedName);
-      setIsLoggedIn(true);
-      if (onLogin) onLogin(savedName);
-    }
+    const checkAndLoadUser = async () => {
+      const savedName = getPlayerName();
+      if (savedName) {
+        // Vérifier si l'utilisateur existe toujours dans la base de données
+        const exists = await checkPlayerNameExists(savedName);
+        if (exists) {
+          setPlayerName(savedName);
+          setIsLoggedIn(true);
+          if (onLogin) onLogin(savedName);
+        } else {
+          // L'utilisateur a été supprimé, effacer le nom local
+          localStorage.removeItem('cmmi_player_name');
+        }
+      }
+    };
+    checkAndLoadUser();
   }, [onLogin]);
 
   const handleSubmit = async (e) => {
