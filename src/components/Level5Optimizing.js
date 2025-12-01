@@ -28,9 +28,10 @@ const Level5Optimizing = () => {
   const [gameActive, setGameActive] = useState(false);
 
   React.useEffect(() => {
-    const updateLockStatus = () => {
+    const updateLockStatus = async () => {
       const playerName = getPlayerName();
-      setIsLocked(isGameLocked('Niveau 5: Optimizing', playerName));
+      const locked = await isGameLocked('Niveau 5: Optimizing', playerName);
+      setIsLocked(locked);
     };
     
     updateLockStatus();
@@ -57,7 +58,9 @@ const Level5Optimizing = () => {
     setGameComplete(true);
     const playerName = getPlayerName();
     if (playerName) {
-      saveScore(playerName, 'Niveau 5: Optimizing', finalScore, improvements.length);
+      saveScore(playerName, 'Niveau 5: Optimizing', finalScore, improvements.length).catch(err => 
+        console.error('Erreur lors de la sauvegarde du score:', err)
+      );
     }
   };
 
@@ -107,7 +110,9 @@ const Level5Optimizing = () => {
         const imp = improvements.find(i => i.id === parseInt(id));
         return acc + (selectedSolutions[id] === imp?.correct ? 1 : 0);
       }, 0);
-      saveScore(playerName, 'Niveau 5: Optimizing', finalScore, improvements.length);
+      saveScore(playerName, 'Niveau 5: Optimizing', finalScore, improvements.length).catch(err => 
+        console.error('Erreur lors de la sauvegarde du score:', err)
+      );
     }
   };
 

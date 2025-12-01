@@ -29,9 +29,10 @@ const Level4QuantitativelyManaged = () => {
   const [gameActive, setGameActive] = useState(false);
 
   React.useEffect(() => {
-    const updateLockStatus = () => {
+    const updateLockStatus = async () => {
       const playerName = getPlayerName();
-      setIsLocked(isGameLocked('Niveau 4: Quantitatively Managed', playerName));
+      const locked = await isGameLocked('Niveau 4: Quantitatively Managed', playerName);
+      setIsLocked(locked);
     };
     
     updateLockStatus();
@@ -54,7 +55,9 @@ const Level4QuantitativelyManaged = () => {
     setGameComplete(true);
     const playerName = getPlayerName();
     if (playerName) {
-      saveScore(playerName, 'Niveau 4: Quantitatively Managed', finalScore, metrics.length);
+      saveScore(playerName, 'Niveau 4: Quantitatively Managed', finalScore, metrics.length).catch(err => 
+        console.error('Erreur lors de la sauvegarde du score:', err)
+      );
     }
   };
 
@@ -98,7 +101,9 @@ const Level4QuantitativelyManaged = () => {
     if (playerName) {
       // Calculer le score final basé sur l'état actuel des métriques
       const finalScore = metrics.filter(m => m.answer === m.correct).length;
-      saveScore(playerName, 'Niveau 4: Quantitatively Managed', finalScore, metrics.length);
+      saveScore(playerName, 'Niveau 4: Quantitatively Managed', finalScore, metrics.length).catch(err => 
+        console.error('Erreur lors de la sauvegarde du score:', err)
+      );
     }
   };
 

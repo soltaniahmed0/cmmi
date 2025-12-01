@@ -20,9 +20,10 @@ const Level1Initial = () => {
   const [gameActive, setGameActive] = useState(false);
 
   React.useEffect(() => {
-    const updateLockStatus = () => {
+    const updateLockStatus = async () => {
       const playerName = getPlayerName();
-      setIsLocked(isGameLocked('Niveau 1: Initial', playerName));
+      const locked = await isGameLocked('Niveau 1: Initial', playerName);
+      setIsLocked(locked);
     };
     
     updateLockStatus();
@@ -133,7 +134,9 @@ const Level1Initial = () => {
     
     const playerName = getPlayerName();
     if (playerName) {
-      saveScore(playerName, 'Niveau 1: Initial', correctCount, questions.length);
+      saveScore(playerName, 'Niveau 1: Initial', correctCount, questions.length).catch(err => 
+        console.error('Erreur lors de la sauvegarde du score:', err)
+      );
     }
   };
 
@@ -172,7 +175,9 @@ const Level1Initial = () => {
     
     const playerName = getPlayerName();
     if (playerName) {
-      saveScore(playerName, 'Niveau 1: Initial', correctCount, questions.length);
+      saveScore(playerName, 'Niveau 1: Initial', correctCount, questions.length).catch(err => 
+        console.error('Erreur lors de la sauvegarde du score:', err)
+      );
     }
   };
 

@@ -10,13 +10,16 @@ const Top3Leaderboard = ({ gameName = null, onClose }) => {
   const [viewMode, setViewMode] = useState(gameName ? 'game' : 'overall');
 
   useEffect(() => {
-    if (viewMode === 'game' && gameName) {
-      const gameTop3 = getTop3(gameName);
-      setTop3(gameTop3);
-    } else {
-      const overall = getOverallRanking();
-      setOverallTop3(overall.slice(0, 3));
-    }
+    const loadData = async () => {
+      if (viewMode === 'game' && gameName) {
+        const gameTop3 = await getTop3(gameName);
+        setTop3(gameTop3);
+      } else {
+        const overall = await getOverallRanking();
+        setOverallTop3(overall.slice(0, 3));
+      }
+    };
+    loadData();
   }, [viewMode, gameName]);
 
   const medals = [

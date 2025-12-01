@@ -33,9 +33,10 @@ const Level3Defined = () => {
   const [selectedStandard, setSelectedStandard] = useState(null); // Pour mobile: processus sélectionné
 
   React.useEffect(() => {
-    const updateLockStatus = () => {
+    const updateLockStatus = async () => {
       const playerName = getPlayerName();
-      setIsLocked(isGameLocked('Niveau 3: Defined', playerName));
+      const locked = await isGameLocked('Niveau 3: Defined', playerName);
+      setIsLocked(locked);
     };
     
     updateLockStatus();
@@ -63,7 +64,9 @@ const Level3Defined = () => {
     setGameComplete(true);
     const playerName = getPlayerName();
     if (playerName) {
-      saveScore(playerName, 'Niveau 3: Defined', correctCount, standards.length);
+      saveScore(playerName, 'Niveau 3: Defined', correctCount, standards.length).catch(err => 
+        console.error('Erreur lors de la sauvegarde du score:', err)
+      );
     }
   };
 
@@ -138,7 +141,9 @@ const Level3Defined = () => {
     const playerName = getPlayerName();
     if (playerName) {
       const correctCount = standards.filter(s => s.category === s.correctCategory).length;
-      saveScore(playerName, 'Niveau 3: Defined', correctCount, standards.length);
+      saveScore(playerName, 'Niveau 3: Defined', correctCount, standards.length).catch(err => 
+        console.error('Erreur lors de la sauvegarde du score:', err)
+      );
     }
   };
 

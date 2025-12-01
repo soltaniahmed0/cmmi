@@ -57,10 +57,33 @@ export const GAME_TO_LEVEL = {
   'Niveau 5: Optimizing': 5
 };
 
-export const getPlayerCMMILevel = (playerName) => {
+// Version synchrone qui utilise localStorage (pour compatibilité)
+const getScoresSync = () => {
+  try {
+    const scoresJson = localStorage.getItem('cmmi_scores');
+    return scoresJson ? JSON.parse(scoresJson) : [];
+  } catch (error) {
+    console.error('Erreur lors de la récupération des scores depuis localStorage:', error);
+    return [];
+  }
+};
+
+export const getPlayerCMMILevel = async (playerName) => {
   if (!playerName) return 0;
   
-  const scores = getScores();
+  // Essayer d'abord avec Firestore (async), puis fallback sur localStorage
+  let scores;
+  try {
+    scores = await getScores();
+  } catch (error) {
+    console.warn('Erreur lors de la récupération des scores, utilisation de localStorage:', error);
+    scores = getScoresSync();
+  }
+  
+  if (!Array.isArray(scores)) {
+    scores = getScoresSync();
+  }
+  
   const playerScores = scores.filter(s => s.playerName === playerName);
   
   // Vérifier chaque niveau dans l'ordre - maintenant on vérifie juste si le jeu a été joué
@@ -80,7 +103,7 @@ export const getPlayerCMMILevel = (playerName) => {
   return 5;
 };
 
-export const isGameLocked = (gameName, playerName = null) => {
+export const isGameLocked = async (gameName, playerName = null) => {
   const currentPlayerName = playerName || getPlayerName();
   if (!currentPlayerName) return true;
   
@@ -90,7 +113,20 @@ export const isGameLocked = (gameName, playerName = null) => {
   // Vérifier si le niveau précédent a été joué (même avec 0% de score)
   const previousLevel = level - 1;
   const previousGame = CMMI_LEVELS[previousLevel].game;
-  const scores = getScores();
+  
+  // Essayer d'abord avec Firestore (async), puis fallback sur localStorage
+  let scores;
+  try {
+    scores = await getScores();
+  } catch (error) {
+    console.warn('Erreur lors de la récupération des scores, utilisation de localStorage:', error);
+    scores = getScoresSync();
+  }
+  
+  if (!Array.isArray(scores)) {
+    scores = getScoresSync();
+  }
+  
   const playerScores = scores.filter(s => s.playerName === currentPlayerName);
   const previousGamePlayed = playerScores.some(s => s.gameName === previousGame);
   
@@ -98,8 +134,9 @@ export const isGameLocked = (gameName, playerName = null) => {
   return !previousGamePlayed;
 };
 
-export const canAccessGame = (gameName, playerName = null) => {
-  return !isGameLocked(gameName, playerName);
+export const canAccessGame = async (gameName, playerName = null) => {
+  const locked = await isGameLocked(gameName, playerName);
+  return !locked;
 };
 
 export const getGameSectionId = (gameName) => {

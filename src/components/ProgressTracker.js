@@ -9,6 +9,7 @@ const ProgressTracker = () => {
   const [playerProgress, setPlayerProgress] = useState({});
   const [masteryLevel, setMasteryLevel] = useState(0);
   const [currentCMMILevel, setCurrentCMMILevel] = useState(0);
+  const [gameLocks, setGameLocks] = useState({});
 
   const games = Object.keys(CMMI_LEVELS).map(levelNum => {
     const level = CMMI_LEVELS[levelNum];
@@ -31,11 +32,11 @@ const ProgressTracker = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const updateProgress = () => {
+  const updateProgress = async () => {
     const playerName = getPlayerName();
     if (!playerName) return;
 
-    const scores = getScores();
+    const scores = await getScores();
     const playerScores = scores.filter(s => s.playerName === playerName);
     
     const progress = {};
@@ -78,13 +79,21 @@ const ProgressTracker = () => {
 
     setPlayerProgress(progress);
     
-    // Get current CMMI level
-    const cmmiLevel = getPlayerCMMILevel(playerName);
+    // Get current CMMI level (async)
+    const cmmiLevel = await getPlayerCMMILevel(playerName);
     setCurrentCMMILevel(cmmiLevel);
     
     // Calculate mastery level
     const mastery = Math.floor((cmmiLevel / 5) * 100);
     setMasteryLevel(mastery);
+    
+    // Update game locks
+    const locks = {};
+    for (const game of games) {
+      const locked = await isGameLocked(game.id);
+      locks[game.id] = locked;
+    }
+    setGameLocks(locks);
   };
 
   const completedCount = Object.values(playerProgress).filter(p => p.completed).length;
@@ -154,7 +163,7 @@ const ProgressTracker = () => {
           <div className="games-list">
             {games.map((game, index) => {
               const progress = playerProgress[game.id] || { completed: false, bestScore: 0, attempts: 0, percentage: 0 };
-              const isLocked = isGameLocked(game.id);
+              const isLocked = gameLocks[game.id] !== undefined ? gameLocks[game.id] : true;
               const prerequisite = game.level > 1 ? games[game.level - 2] : null;
               
               return (

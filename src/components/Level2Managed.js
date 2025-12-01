@@ -25,9 +25,10 @@ const Level2Managed = () => {
   const [gameActive, setGameActive] = useState(false);
 
   React.useEffect(() => {
-    const updateLockStatus = () => {
+    const updateLockStatus = async () => {
       const playerName = getPlayerName();
-      setIsLocked(isGameLocked('Niveau 2: Managed', playerName));
+      const locked = await isGameLocked('Niveau 2: Managed', playerName);
+      setIsLocked(locked);
     };
     
     updateLockStatus();
@@ -58,7 +59,9 @@ const Level2Managed = () => {
     setGameComplete(true);
     const playerName = getPlayerName();
     if (playerName) {
-      saveScore(playerName, 'Niveau 2: Managed', finalScore, projects.length);
+      saveScore(playerName, 'Niveau 2: Managed', finalScore, projects.length).catch(err => 
+        console.error('Erreur lors de la sauvegarde du score:', err)
+      );
     }
   };
 
@@ -123,7 +126,9 @@ const Level2Managed = () => {
         return p.completed.length === correctOrder.length &&
                correctOrder.every((t, idx) => p.completed[idx] === t);
       }).length;
-      saveScore(playerName, 'Niveau 2: Managed', finalScore, projects.length);
+      saveScore(playerName, 'Niveau 2: Managed', finalScore, projects.length).catch(err => 
+        console.error('Erreur lors de la sauvegarde du score:', err)
+      );
     }
   };
 

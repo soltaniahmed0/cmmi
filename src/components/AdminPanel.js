@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaTrophy, FaMedal, FaAward, FaLock, FaUsers, FaChartBar } from 'react-icons/fa';
-import { getTopScores, getOverallRanking, clearAllScores, getScores } from '../utils/scoreManager';
+import { getOverallRanking, clearAllScores, subscribeToScores } from '../utils/scoreManager';
 import { getPlayerCMMILevel, CMMI_LEVELS } from '../utils/gameLock';
 import Top3Leaderboard from './Top3Leaderboard';
 import './AdminPanel.css';
@@ -19,22 +19,10 @@ const AdminPanel = ({ onClose }) => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      // Écouter les événements de mise à jour des scores en temps réel
-      const handleScoreUpdate = () => {
+      // Utiliser subscribeToScores pour les mises à jour en temps réel depuis Firestore
+      const unsubscribe = subscribeToScores((newScores) => {
         setAllScores(prevScores => {
           const previousScoresCount = prevScores.length;
-          const newScores = getScores();
-          
-          const ranking = getOverallRanking();
-          // Add CMMI level to each player
-          const rankingWithLevel = ranking.map(player => ({
-            ...player,
-            cmmiLevel: getPlayerCMMILevel(player.playerName),
-            cmmiLevelName: getPlayerCMMILevel(player.playerName) > 0 
-              ? `Niveau ${getPlayerCMMILevel(player.playerName)}: ${CMMI_LEVELS[getPlayerCMMILevel(player.playerName)].name}`
-              : 'Aucun niveau'
-          }));
-          setOverallRanking(rankingWithLevel);
           
           // Détecter les nouveaux scores
           if (newScores.length > previousScoresCount) {
@@ -46,55 +34,38 @@ const AdminPanel = ({ onClose }) => {
           
           return newScores;
         });
-      };
-      
-      // Charger les données initiales
-      handleScoreUpdate();
-      
-      window.addEventListener('scoreUpdated', handleScoreUpdate);
-      window.addEventListener('storage', handleScoreUpdate); // Pour les changements de localStorage dans d'autres onglets
-      
-      // Vérifier les changements toutes les secondes pour la mise à jour en temps réel
-      const interval = setInterval(handleScoreUpdate, 1000);
+
+        // Mettre à jour le classement général (async)
+        getOverallRanking().then(async (ranking) => {
+          // Récupérer les niveaux CMMI pour chaque joueur (async)
+          const rankingWithLevelPromises = ranking.map(async (player) => {
+            const cmmiLevel = await getPlayerCMMILevel(player.playerName);
+            return {
+              ...player,
+              cmmiLevel,
+              cmmiLevelName: cmmiLevel > 0 
+                ? `Niveau ${cmmiLevel}: ${CMMI_LEVELS[cmmiLevel].name}`
+                : 'Aucun niveau'
+            };
+          });
+          
+          const rankingWithLevel = await Promise.all(rankingWithLevelPromises);
+          setOverallRanking(rankingWithLevel);
+        }).catch(err => {
+          console.error('Erreur lors de la mise à jour du classement:', err);
+        });
+      });
       
       return () => {
-        window.removeEventListener('scoreUpdated', handleScoreUpdate);
-        window.removeEventListener('storage', handleScoreUpdate);
-        clearInterval(interval);
+        if (unsubscribe) unsubscribe();
       };
     }
   }, [isAuthenticated]);
 
-  const loadData = () => {
-    const previousScoresCount = allScores.length;
-    const newScores = getScores();
-    setAllScores(newScores);
-    
-    const ranking = getOverallRanking();
-    // Add CMMI level to each player
-    const rankingWithLevel = ranking.map(player => ({
-      ...player,
-      cmmiLevel: getPlayerCMMILevel(player.playerName),
-      cmmiLevelName: getPlayerCMMILevel(player.playerName) > 0 
-        ? `Niveau ${getPlayerCMMILevel(player.playerName)}: ${CMMI_LEVELS[getPlayerCMMILevel(player.playerName)].name}`
-        : 'Aucun niveau'
-    }));
-    setOverallRanking(rankingWithLevel);
-    
-    // Détecter les nouveaux scores
-    if (newScores.length > previousScoresCount) {
-      setNewScoresCount(newScores.length - previousScoresCount);
-      setLastUpdateTime(Date.now());
-      // Réinitialiser le compteur après 3 secondes
-      setTimeout(() => setNewScoresCount(0), 3000);
-    }
-  };
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
-      loadData();
     } else {
       alert('Mot de passe incorrect');
     }
@@ -106,10 +77,10 @@ const AdminPanel = ({ onClose }) => {
     if (onClose) onClose();
   };
 
-  const handleClearScores = () => {
+  const handleClearScores = async () => {
     if (window.confirm('Êtes-vous sûr de vouloir effacer tous les scores ?')) {
-      clearAllScores();
-      loadData();
+      await clearAllScores();
+      // Les données seront mises à jour automatiquement via subscribeToScores
     }
   };
 
