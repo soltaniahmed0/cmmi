@@ -234,12 +234,18 @@ export const getOverallRanking = async () => {
     player.averagePercentage = Math.round(totalPercentage / player.gamesPlayed);
   });
 
-  // Convertir en array et trier
+  // Convertir en array et trier par score total (critère principal)
   const ranking = Object.values(playerStats).sort((a, b) => {
+    // Trier d'abord par score total (descendant)
+    if (b.totalScore !== a.totalScore) {
+      return b.totalScore - a.totalScore;
+    }
+    // Si score total égal, trier par moyenne (descendant)
     if (b.averagePercentage !== a.averagePercentage) {
       return b.averagePercentage - a.averagePercentage;
     }
-    return b.totalScore - a.totalScore;
+    // Si tout est égal, trier par nombre de jeux joués (descendant)
+    return b.gamesPlayed - a.gamesPlayed;
   });
 
   return ranking;
