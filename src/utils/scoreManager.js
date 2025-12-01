@@ -156,8 +156,8 @@ export const getScores = async () => {
 
 // Écouter les changements en temps réel (pour AdminPanel)
 export const subscribeToScores = (callback) => {
-  // Si Firestore n'est pas configuré, utiliser localStorage avec polling
-  if (!isFirestoreConfigured()) {
+  // Si Firestore n'est pas configuré ou db n'est pas initialisé, utiliser localStorage avec polling
+  if (!isFirestoreConfigured() || !db) {
     const handleUpdate = () => {
       callback(getScoresLocalStorage());
     };
@@ -179,16 +179,24 @@ export const subscribeToScores = (callback) => {
   }
 
   try {
+    // Récupérer tous les scores sans orderBy pour éviter les problèmes d'index
     const scoresRef = collection(db, 'scores');
-    const q = query(scoresRef, orderBy('date', 'desc'));
     
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const unsubscribe = onSnapshot(scoresRef, (querySnapshot) => {
       const scores = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         date: doc.data().date?.toDate ? doc.data().date.toDate().toISOString() : doc.data().date
       }));
-      callback(scores);
+      
+      // Trier côté client par date (descendant)
+      const sortedScores = scores.sort((a, b) => {
+        const dateA = new Date(a.date || 0);
+        const dateB = new Date(b.date || 0);
+        return dateB - dateA;
+      });
+      
+      callback(sortedScores);
     }, (error) => {
       console.error('Erreur lors de l\'écoute des scores:', error);
       // Fallback sur localStorage
