@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminPanel from '../components/AdminPanel';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import { motion } from 'framer-motion';
 import { FaQrcode, FaDownload, FaCopy, FaHome } from 'react-icons/fa';
 import './AdminPage.css';
@@ -11,13 +11,45 @@ const AdminPage = () => {
   const appUrl = 'https://cmmi-seven.vercel.app/';
 
   const handleDownloadQR = () => {
-    const canvas = document.getElementById('qr-code');
-    if (canvas) {
-      const url = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.download = 'cmmi-qr-code.png';
-      link.href = url;
-      link.click();
+    const qrElement = document.getElementById('qr-code');
+    if (qrElement) {
+      // qrcode.react génère un SVG, on doit le convertir en canvas puis en image
+      const svg = qrElement.querySelector('svg');
+      if (svg) {
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = () => {
+          // Ajouter un padding blanc autour du QR code
+          const padding = 20;
+          canvas.width = img.width + (padding * 2);
+          canvas.height = img.height + (padding * 2);
+          
+          // Fond blanc
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Dessiner l'image
+          ctx.drawImage(img, padding, padding);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.download = 'cmmi-qr-code.png';
+              link.href = url;
+              link.click();
+              URL.revokeObjectURL(url);
+            }
+          }, 'image/png');
+        };
+        
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        img.src = url;
+      }
     }
   };
 
@@ -68,9 +100,8 @@ const AdminPage = () => {
               Scannez ce QR code pour accéder à l'application CMMI
             </p>
             
-            <div className="qr-code-container">
-              <QRCode
-                id="qr-code"
+            <div className="qr-code-container" id="qr-code">
+              <QRCodeSVG
                 value={appUrl}
                 size={256}
                 level="H"

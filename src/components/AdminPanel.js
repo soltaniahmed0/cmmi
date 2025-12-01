@@ -8,7 +8,7 @@ import Top3Leaderboard from './Top3Leaderboard';
 import './AdminPanel.css';
 
 const AdminPanel = ({ onClose }) => {
-  // useNavigate est disponible car AdminPanel est toujours dans un Router maintenant
+  // useNavigate doit être appelé inconditionnellement, mais on ne l'utilise que si onClose n'est pas fourni
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
