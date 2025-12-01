@@ -61,8 +61,29 @@ const AdminPanel = ({ onClose }) => {
       });
 
       // Utiliser subscribeToUsers pour les mises à jour en temps réel des utilisateurs
-      const unsubscribeUsers = subscribeToUsers((users) => {
-        setAllUsers(users);
+      const unsubscribeUsers = subscribeToUsers(async (users) => {
+        // Synchroniser avec les scores pour s'assurer que tous les utilisateurs qui ont des scores sont dans la liste
+        const scores = await getScores();
+        const uniquePlayerNames = [...new Set(scores.map(s => s.playerName))];
+        
+        // Vérifier si certains utilisateurs avec scores ne sont pas dans la liste users
+        const missingUsers = uniquePlayerNames.filter(playerName => 
+          !users.some(u => u.playerName.toLowerCase() === playerName.toLowerCase())
+        );
+        
+        // Si des utilisateurs manquent, les ajouter temporairement pour l'affichage
+        if (missingUsers.length > 0) {
+          const missingUsersData = missingUsers.map(playerName => ({
+            id: `temp_${Date.now()}_${playerName}`,
+            playerName,
+            createdAt: new Date().toISOString(),
+            lastActive: new Date().toISOString(),
+            isFromScores: true // Indicateur que c'est un utilisateur dérivé des scores
+          }));
+          setAllUsers([...users, ...missingUsersData]);
+        } else {
+          setAllUsers(users);
+        }
       });
       
       return () => {
