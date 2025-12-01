@@ -57,6 +57,39 @@ export const saveScore = async (playerName, gameName, score, maxScore, timeSpent
   }
 
   try {
+    // S'assurer que l'utilisateur existe dans la collection users
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('playerName'));
+    const querySnapshot = await getDocs(q);
+    
+    const existingUser = querySnapshot.docs.find(doc => 
+      doc.data().playerName.toLowerCase() === playerName.toLowerCase()
+    );
+
+    // Si l'utilisateur n'existe pas, le créer automatiquement
+    if (!existingUser) {
+      try {
+        await addDoc(collection(db, 'users'), {
+          playerName,
+          createdAt: Timestamp.now(),
+          lastActive: Timestamp.now()
+        });
+        window.dispatchEvent(new Event('userRegistered'));
+      } catch (userError) {
+        console.warn('Erreur lors de la création automatique de l\'utilisateur:', userError);
+      }
+    } else {
+      // Mettre à jour lastActive
+      try {
+        const userRef = doc(db, 'users', existingUser.id);
+        await updateDoc(userRef, {
+          lastActive: Timestamp.now()
+        });
+      } catch (updateError) {
+        console.warn('Erreur lors de la mise à jour lastActive:', updateError);
+      }
+    }
+
     const percentage = Math.round((score / maxScore) * 100);
     const newScore = {
       playerName,
