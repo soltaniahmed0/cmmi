@@ -9,6 +9,7 @@ import {
   doc,
   writeBatch,
   onSnapshot,
+  updateDoc,
   Timestamp
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -281,7 +282,174 @@ export const getPlayerName = () => {
   return localStorage.getItem('cmmi_player_name') || '';
 };
 
-export const savePlayerName = (name) => {
-  localStorage.setItem('cmmi_player_name', name);
+// Vérifier si un nom d'utilisateur existe déjà
+export const checkPlayerNameExists = async (playerName) => {
+  if (!playerName || !playerName.trim()) return false;
+
+  // Si Firestore n'est pas configuré, utiliser localStorage
+  if (!isFirestoreConfigured()) {
+    const users = JSON.parse(localStorage.getItem('cmmi_users') || '[]');
+    return users.some(u => u.playerName.toLowerCase() === playerName.trim().toLowerCase());
+  }
+
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('playerName'));
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.some(doc => 
+      doc.data().playerName.toLowerCase() === playerName.trim().toLowerCase()
+    );
+  } catch (error) {
+    console.error('Erreur lors de la vérification du nom:', error);
+    // Fallback sur localStorage
+    const users = JSON.parse(localStorage.getItem('cmmi_users') || '[]');
+    return users.some(u => u.playerName.toLowerCase() === playerName.trim().toLowerCase());
+  }
+};
+
+// Enregistrer un nouvel utilisateur (même s'il n'a pas encore joué)
+export const registerPlayer = async (playerName) => {
+  if (!playerName || !playerName.trim()) return null;
+
+  const trimmedName = playerName.trim();
+  
+  // Si Firestore n'est pas configuré, utiliser localStorage
+  if (!isFirestoreConfigured()) {
+    const users = JSON.parse(localStorage.getItem('cmmi_users') || '[]');
+    
+    // Vérifier si l'utilisateur existe déjà
+    const existingUser = users.find(u => u.playerName.toLowerCase() === trimmedName.toLowerCase());
+    if (existingUser) {
+      // L'utilisateur existe déjà, mettre à jour lastActive
+      existingUser.lastActive = new Date().toISOString();
+      localStorage.setItem('cmmi_users', JSON.stringify(users));
+      localStorage.setItem('cmmi_player_name', trimmedName);
+      return existingUser;
+    }
+
+    const newUser = {
+      id: Date.now(),
+      playerName: trimmedName,
+      createdAt: new Date().toISOString(),
+      lastActive: new Date().toISOString()
+    };
+
+    users.push(newUser);
+    localStorage.setItem('cmmi_users', JSON.stringify(users));
+    localStorage.setItem('cmmi_player_name', trimmedName);
+    window.dispatchEvent(new Event('userRegistered'));
+    return newUser;
+  }
+
+  try {
+    // Vérifier si l'utilisateur existe déjà dans Firestore
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('playerName'));
+    const querySnapshot = await getDocs(q);
+    
+    const existingUserDoc = querySnapshot.docs.find(doc => 
+      doc.data().playerName.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (existingUserDoc) {
+      // L'utilisateur existe déjà, mettre à jour lastActive
+      const userRef = doc(db, 'users', existingUserDoc.id);
+      await updateDoc(userRef, {
+        lastActive: Timestamp.now()
+      });
+      
+      localStorage.setItem('cmmi_player_name', trimmedName);
+      
+      return {
+        id: existingUserDoc.id,
+        ...existingUserDoc.data(),
+        createdAt: existingUserDoc.data().createdAt?.toDate ? existingUserDoc.data().createdAt.toDate().toISOString() : existingUserDoc.data().createdAt,
+        lastActive: new Date().toISOString()
+      };
+    }
+
+    // Créer le nouvel utilisateur dans Firestore
+    const newUser = {
+      playerName: trimmedName,
+      createdAt: Timestamp.now(),
+      lastActive: Timestamp.now()
+    };
+
+    const docRef = await addDoc(collection(db, 'users'), newUser);
+    
+    // Sauvegarder aussi dans localStorage pour la session
+    localStorage.setItem('cmmi_player_name', trimmedName);
+    
+    // Mettre à jour lastActive dans localStorage
+    const localUsers = JSON.parse(localStorage.getItem('cmmi_users') || '[]');
+    localUsers.push({
+      id: docRef.id,
+      ...newUser,
+      createdAt: newUser.createdAt.toDate().toISOString(),
+      lastActive: newUser.lastActive.toDate().toISOString()
+    });
+    localStorage.setItem('cmmi_users', JSON.stringify(localUsers));
+    
+    window.dispatchEvent(new Event('userRegistered'));
+    
+    return {
+      id: docRef.id,
+      ...newUser,
+      createdAt: newUser.createdAt.toDate().toISOString(),
+      lastActive: newUser.lastActive.toDate().toISOString()
+    };
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', error);
+    throw error;
+  }
+};
+
+export const savePlayerName = async (name) => {
+  if (!name || !name.trim()) {
+    localStorage.removeItem('cmmi_player_name');
+    return;
+  }
+
+  const trimmedName = name.trim();
+  
+  // Vérifier si c'est le même nom que celui déjà enregistré localement
+  const currentName = localStorage.getItem('cmmi_player_name');
+  if (currentName === trimmedName) {
+    // C'est le même nom, pas besoin de réenregistrer
+    return;
+  }
+
+  try {
+    await registerPlayer(trimmedName);
+  } catch (error) {
+    // Si c'est juste une erreur de duplication, la relancer
+    throw error;
+  }
+};
+
+// Récupérer tous les utilisateurs (même ceux sans scores)
+export const getAllUsers = async () => {
+  if (!isFirestoreConfigured()) {
+    const users = JSON.parse(localStorage.getItem('cmmi_users') || '[]');
+    return users;
+  }
+
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toISOString() : doc.data().createdAt,
+      lastActive: doc.data().lastActive?.toDate ? doc.data().lastActive.toDate().toISOString() : doc.data().lastActive
+    }));
+  } catch (error) {
+    console.error('Erreur lors de la récupération des utilisateurs:', error);
+    // Fallback sur localStorage
+    return JSON.parse(localStorage.getItem('cmmi_users') || '[]');
+  }
 };
 

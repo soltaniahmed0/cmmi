@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaPlay } from 'react-icons/fa';
+import { FaUser, FaPlay, FaExclamationTriangle } from 'react-icons/fa';
 import { savePlayerName, getPlayerName } from '../utils/scoreManager';
 import './UserLogin.css';
 
 const UserLogin = ({ onLogin }) => {
   const [playerName, setPlayerName] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [error, setError] = useState('');
+  const [isChecking, setIsChecking] = useState(false);
 
   useEffect(() => {
     const savedName = getPlayerName();
@@ -17,12 +19,26 @@ const UserLogin = ({ onLogin }) => {
     }
   }, [onLogin]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (playerName.trim()) {
-      savePlayerName(playerName.trim());
+    const trimmedName = playerName.trim();
+    
+    if (!trimmedName) {
+      setError('Veuillez entrer un nom');
+      return;
+    }
+
+    setIsChecking(true);
+    setError('');
+
+    try {
+      await savePlayerName(trimmedName);
       setIsLoggedIn(true);
-      if (onLogin) onLogin(playerName.trim());
+      if (onLogin) onLogin(trimmedName);
+    } catch (error) {
+      setError(error.message || 'Ce nom est déjà utilisé. Veuillez choisir un autre nom.');
+    } finally {
+      setIsChecking(false);
     }
   };
 
@@ -67,15 +83,34 @@ const UserLogin = ({ onLogin }) => {
           <input
             type="text"
             value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
+            onChange={(e) => {
+              setPlayerName(e.target.value);
+              setError(''); // Effacer l'erreur quand l'utilisateur tape
+            }}
             placeholder="Votre nom..."
-            className="name-input"
+            className={`name-input ${error ? 'error' : ''}`}
             maxLength={20}
             required
             autoFocus
+            disabled={isChecking}
           />
-          <button type="submit" className="login-btn">
-            <FaPlay /> Commencer à jouer
+          {error && (
+            <motion.div
+              className="error-message"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <FaExclamationTriangle /> {error}
+            </motion.div>
+          )}
+          <button type="submit" className="login-btn" disabled={isChecking}>
+            {isChecking ? (
+              <>⏳ Vérification...</>
+            ) : (
+              <>
+                <FaPlay /> Commencer à jouer
+              </>
+            )}
           </button>
         </form>
       </div>
