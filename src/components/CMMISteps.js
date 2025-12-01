@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheckCircle, FaLock, FaUser } from 'react-icons/fa';
+import { getPlayerCMMILevel } from '../utils/gameLock';
+import { getPlayerName } from '../utils/scoreManager';
 import './CMMISteps.css';
 
 const CMMISteps = () => {
   const [currentLevel, setCurrentLevel] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [playerCMMILevel, setPlayerCMMILevel] = useState(0);
 
   const levels = [
     {
@@ -55,13 +58,70 @@ const CMMISteps = () => {
     }
   ];
 
+  // Mettre à jour le niveau automatiquement en fonction de la progression réelle du joueur
+  useEffect(() => {
+    const updateCurrentLevel = async () => {
+      const playerName = getPlayerName();
+      if (!playerName) {
+        setPlayerCMMILevel(0);
+        setCurrentLevel(prev => {
+          if (prev !== 0) return 0;
+          return prev;
+        });
+        return;
+      }
+
+      try {
+        const cmmiLevel = await getPlayerCMMILevel(playerName);
+        setPlayerCMMILevel(cmmiLevel);
+        
+        // Utiliser la fonction de mise à jour fonctionnelle pour éviter les dépendances
+        setCurrentLevel(prev => {
+          // Si le niveau a changé et augmente, animer la transition
+          if (cmmiLevel !== prev && cmmiLevel > prev) {
+            setIsAnimating(true);
+            setTimeout(() => {
+              setIsAnimating(false);
+            }, 500);
+            return cmmiLevel;
+          } else if (cmmiLevel !== prev) {
+            return cmmiLevel;
+          }
+          return prev;
+        });
+      } catch (error) {
+        console.error('Erreur lors de la récupération du niveau CMMI:', error);
+      }
+    };
+
+    // Mise à jour initiale
+    updateCurrentLevel();
+
+    // Écouter les événements de mise à jour des scores
+    const handleScoreUpdate = () => {
+      updateCurrentLevel();
+    };
+
+    window.addEventListener('scoreUpdated', handleScoreUpdate);
+    window.addEventListener('storage', handleScoreUpdate);
+
+    // Vérifier périodiquement pour les mises à jour (pour Firebase en temps réel)
+    const interval = setInterval(updateCurrentLevel, 2000);
+
+    return () => {
+      window.removeEventListener('scoreUpdated', handleScoreUpdate);
+      window.removeEventListener('storage', handleScoreUpdate);
+      clearInterval(interval);
+    };
+  }, []); // Pas de dépendances pour éviter les boucles infinies
+
   const handleNextLevel = () => {
     if (currentLevel < levels.length - 1 && !isAnimating) {
       setIsAnimating(true);
       setTimeout(() => {
         setCurrentLevel(currentLevel + 1);
         setIsAnimating(false);
-      }, 2000); // Animation plus douce et plus longue
+      }, 500);
     }
   };
 
@@ -187,11 +247,6 @@ const CMMISteps = () => {
                     y: -5,
                     boxShadow: `0 10px 30px ${level.color}60`
                   } : {}}
-                  onClick={() => {
-                    if (isReached) {
-                      setCurrentLevel(index);
-                    }
-                  }}
                 >
                   <div className="step-content">
                     <div className="step-icon">{level.icon}</div>
@@ -227,36 +282,16 @@ const CMMISteps = () => {
             })}
           </div>
 
-          {/* Control buttons */}
-          <div className="steps-controls">
-            <button
-              className="control-btn prev-btn"
-              onClick={handlePreviousLevel}
-              disabled={currentLevel === 0 || isAnimating}
-            >
-              ⬅ Niveau Précédent
-            </button>
-            <motion.button
-              className="control-btn next-btn"
-              onClick={handleNextLevel}
-              disabled={currentLevel === levels.length - 1 || isAnimating}
-              whileHover={!isAnimating && currentLevel < levels.length - 1 ? { scale: 1.05, y: -2 } : {}}
-              whileTap={!isAnimating ? { scale: 0.95 } : {}}
-              style={{
-                background: currentLevel < levels.length - 1 
-                  ? `linear-gradient(135deg, ${levels[currentLevel + 1].color}, ${levels[currentLevel + 1].color}dd)`
-                  : undefined
-              }}
-            >
-              {isAnimating ? '⏳ En cours...' : currentLevel < levels.length - 1 ? 'Niveau Suivant ➡' : '🎉 Terminé !'}
-            </motion.button>
-            <button
-              className="control-btn reset-btn"
-              onClick={resetJourney}
-              disabled={isAnimating}
-            >
-              🔄 Recommencer
-            </button>
+          {/* Control buttons - optionnels, le niveau se met à jour automatiquement */}
+          <div className="steps-controls" style={{ opacity: 0.6, pointerEvents: 'none' }}>
+            <div style={{ 
+              textAlign: 'center', 
+              color: '#a0aec0', 
+              fontSize: '0.9rem',
+              marginTop: '1rem'
+            }}>
+              💡 Le niveau se met à jour automatiquement après chaque jeu terminé
+            </div>
           </div>
 
 
