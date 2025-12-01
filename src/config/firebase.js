@@ -14,10 +14,26 @@ const firebaseConfig = {
 };
 
 // Initialiser Firebase
-const app = initializeApp(firebaseConfig);
+let app = null;
+let db = null;
 
-// Initialiser Firestore
-export const db = getFirestore(app);
+try {
+  // Vérifier que les variables d'environnement sont définies
+  if (firebaseConfig.apiKey && 
+      firebaseConfig.projectId && 
+      firebaseConfig.apiKey !== 'your-api-key' && 
+      firebaseConfig.projectId !== 'your-project-id') {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    console.log('Firebase initialisé avec succès');
+  } else {
+    console.warn('Firebase n\'est pas configuré. Utilisation de localStorage.');
+  }
+} catch (error) {
+  console.error('Erreur lors de l\'initialisation de Firebase:', error);
+  // Continuer sans Firebase (fallback sur localStorage)
+}
 
+export { db };
 export default app;
 

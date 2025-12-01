@@ -384,14 +384,20 @@ export const registerPlayer = async (playerName) => {
   }
 
   try {
+    // Vérifier que db est bien initialisé
+    if (!db) {
+      throw new Error('Firestore database is not initialized');
+    }
+
     // Vérifier si l'utilisateur existe déjà dans Firestore
     // On récupère tous les utilisateurs sans orderBy pour éviter les problèmes d'index
     const usersRef = collection(db, 'users');
     const querySnapshot = await getDocs(usersRef);
     
-    const existingUserDoc = querySnapshot.docs.find(doc => 
-      doc.data().playerName.toLowerCase() === trimmedName.toLowerCase()
-    );
+    const existingUserDoc = querySnapshot.docs.find(doc => {
+      const data = doc.data();
+      return data.playerName && data.playerName.toLowerCase() === trimmedName.toLowerCase();
+    });
 
     // Si l'utilisateur existe ET ce n'est pas le même utilisateur actuel, rejeter
     if (existingUserDoc && currentLocalName !== trimmedName) {
@@ -420,6 +426,11 @@ export const registerPlayer = async (playerName) => {
       lastActive: Timestamp.now()
     };
 
+    // Vérifier que db est bien initialisé
+    if (!db) {
+      throw new Error('Firestore database is not initialized. Please check your Firebase configuration.');
+    }
+
     const docRef = await addDoc(collection(db, 'users'), newUser);
     
     // Sauvegarder aussi dans localStorage pour la session
@@ -445,6 +456,16 @@ export const registerPlayer = async (playerName) => {
     };
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', error);
+    
+    // Message d'erreur plus explicite
+    if (error.code === 'permission-denied' || error.message?.includes('permission')) {
+      throw new Error('Permissions Firestore insuffisantes. Veuillez vérifier les règles de sécurité dans Firebase Console.');
+    } else if (error.code === 'unavailable') {
+      throw new Error('Firestore est temporairement indisponible. Veuillez réessayer plus tard.');
+    } else if (error.message?.includes('index')) {
+      throw new Error('Index Firestore manquant. Veuillez créer l\'index requis ou contacter l\'administrateur.');
+    }
+    
     throw error;
   }
 };
