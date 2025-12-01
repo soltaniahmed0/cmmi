@@ -109,8 +109,18 @@ export const saveScore = async (playerName, gameName, score, maxScore, timeSpent
 
     const docRef = await addDoc(collection(db, 'scores'), newScore);
     
-    // Émettre un événement pour la mise à jour locale
+    // Sauvegarder aussi dans localStorage pour la session locale
+    const localScores = getScoresLocalStorage();
+    localScores.push({
+      id: docRef.id,
+      ...newScore,
+      date: newScore.date.toDate().toISOString()
+    });
+    localStorage.setItem('cmmi_scores', JSON.stringify(localScores));
+    
+    // Émettre un événement pour la mise à jour locale (important pour déverrouiller les niveaux)
     window.dispatchEvent(new Event('scoreUpdated'));
+    window.dispatchEvent(new Event('storage'));
     
     return {
       id: docRef.id,
