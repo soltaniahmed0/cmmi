@@ -326,9 +326,9 @@ export const checkPlayerNameExists = async (playerName) => {
   }
 
   try {
+    // Récupérer tous les utilisateurs sans orderBy pour éviter les problèmes d'index
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, orderBy('playerName'));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(usersRef);
     
     return querySnapshot.docs.some(doc => 
       doc.data().playerName.toLowerCase() === playerName.trim().toLowerCase()
@@ -385,9 +385,9 @@ export const registerPlayer = async (playerName) => {
 
   try {
     // Vérifier si l'utilisateur existe déjà dans Firestore
+    // On récupère tous les utilisateurs sans orderBy pour éviter les problèmes d'index
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, orderBy('playerName'));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(usersRef);
     
     const existingUserDoc = querySnapshot.docs.find(doc => 
       doc.data().playerName.toLowerCase() === trimmedName.toLowerCase()
@@ -480,16 +480,23 @@ export const getAllUsers = async () => {
   }
 
   try {
+    // Récupérer tous les utilisateurs et trier côté client pour éviter les problèmes d'index
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, orderBy('createdAt', 'desc'));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(usersRef);
     
-    return querySnapshot.docs.map(doc => ({
+    const users = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toISOString() : doc.data().createdAt,
       lastActive: doc.data().lastActive?.toDate ? doc.data().lastActive.toDate().toISOString() : doc.data().lastActive
     }));
+    
+    // Trier côté client par date de création (descendant)
+    return users.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0);
+      const dateB = new Date(b.createdAt || 0);
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error('Erreur lors de la récupération des utilisateurs:', error);
     // Fallback sur localStorage
@@ -524,16 +531,23 @@ export const subscribeToUsers = (callback) => {
 
   try {
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, orderBy('createdAt', 'desc'));
     
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const unsubscribe = onSnapshot(usersRef, (querySnapshot) => {
       const users = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toISOString() : doc.data().createdAt,
         lastActive: doc.data().lastActive?.toDate ? doc.data().lastActive.toDate().toISOString() : doc.data().lastActive
       }));
-      callback(users);
+      
+      // Trier côté client par date de création (descendant)
+      const sortedUsers = users.sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0);
+        const dateB = new Date(b.createdAt || 0);
+        return dateB - dateA;
+      });
+      
+      callback(sortedUsers);
     }, (error) => {
       console.error('Erreur lors de l\'écoute des utilisateurs:', error);
       // Fallback sur localStorage
