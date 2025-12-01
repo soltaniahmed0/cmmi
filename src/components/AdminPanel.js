@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaMedal, FaAward, FaLock, FaUsers, FaChartBar } from 'react-icons/fa';
-import { getOverallRanking, clearAllScores, subscribeToScores, subscribeToUsers, getScores } from '../utils/scoreManager';
+import { getOverallRanking, clearAllScores, subscribeToScores } from '../utils/scoreManager';
 import { getPlayerCMMILevel, CMMI_LEVELS } from '../utils/gameLock';
 import Top3Leaderboard from './Top3Leaderboard';
 import './AdminPanel.css';
@@ -14,7 +14,6 @@ const AdminPanel = ({ onClose }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [allScores, setAllScores] = useState([]);
   const [overallRanking, setOverallRanking] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
   const [activeTab, setActiveTab] = useState('overall');
   const [lastUpdateTime, setLastUpdateTime] = useState(Date.now());
   const [newScoresCount, setNewScoresCount] = useState(0);
@@ -24,7 +23,7 @@ const AdminPanel = ({ onClose }) => {
   useEffect(() => {
     if (isAuthenticated) {
       // Utiliser subscribeToScores pour les mises à jour en temps réel depuis Firestore
-      const unsubscribeScores = subscribeToScores((newScores) => {
+      const unsubscribe = subscribeToScores((newScores) => {
         setAllScores(prevScores => {
           const previousScoresCount = prevScores.length;
           
@@ -59,36 +58,9 @@ const AdminPanel = ({ onClose }) => {
           console.error('Erreur lors de la mise à jour du classement:', err);
         });
       });
-
-      // Utiliser subscribeToUsers pour les mises à jour en temps réel des utilisateurs
-      const unsubscribeUsers = subscribeToUsers(async (users) => {
-        // Synchroniser avec les scores pour s'assurer que tous les utilisateurs qui ont des scores sont dans la liste
-        const scores = await getScores();
-        const uniquePlayerNames = [...new Set(scores.map(s => s.playerName))];
-        
-        // Vérifier si certains utilisateurs avec scores ne sont pas dans la liste users
-        const missingUsers = uniquePlayerNames.filter(playerName => 
-          !users.some(u => u.playerName.toLowerCase() === playerName.toLowerCase())
-        );
-        
-        // Si des utilisateurs manquent, les ajouter temporairement pour l'affichage
-        if (missingUsers.length > 0) {
-          const missingUsersData = missingUsers.map(playerName => ({
-            id: `temp_${Date.now()}_${playerName}`,
-            playerName,
-            createdAt: new Date().toISOString(),
-            lastActive: new Date().toISOString(),
-            isFromScores: true // Indicateur que c'est un utilisateur dérivé des scores
-          }));
-          setAllUsers([...users, ...missingUsersData]);
-        } else {
-          setAllUsers(users);
-        }
-      });
       
       return () => {
-        if (unsubscribeScores) unsubscribeScores();
-        if (unsubscribeUsers) unsubscribeUsers();
+        if (unsubscribe) unsubscribe();
       };
     }
   }, [isAuthenticated]);
@@ -205,12 +177,6 @@ const AdminPanel = ({ onClose }) => {
             <FaUsers /> Classement Général
           </button>
           <button
-            className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
-            onClick={() => setActiveTab('users')}
-          >
-            <FaUsers /> Tous les Utilisateurs ({allUsers.length})
-          </button>
-          <button
             className={`admin-tab ${activeTab === 'scores' ? 'active' : ''}`}
             onClick={() => setActiveTab('scores')}
           >
@@ -276,61 +242,6 @@ const AdminPanel = ({ onClose }) => {
                 })}
                 {overallRanking.length === 0 && (
                   <div className="no-data">Aucun score enregistré</div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'users' && (
-            <div className="admin-section">
-              <h3>Tous les Utilisateurs ({allUsers.length})</h3>
-              <div className="users-list">
-                {allUsers.map((user, index) => {
-                  // Vérifier si l'utilisateur a des scores
-                  const userScores = allScores.filter(s => s.playerName === user.playerName);
-                  const hasScores = userScores.length > 0;
-                  const userRanking = overallRanking.find(r => r.playerName === user.playerName);
-                  
-                  return (
-                    <motion.div
-                      key={user.id || index}
-                      className={`user-item ${!hasScores ? 'no-scores' : ''}`}
-                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ delay: index * 0.02 }}
-                      layout
-                    >
-                      <div className="user-info-admin">
-                        <div className="user-name-admin">{user.playerName}</div>
-                        <div className="user-details">
-                          {hasScores ? (
-                            <>
-                              <span className="user-stat">🎮 {userScores.length} jeu{userScores.length > 1 ? 'x' : ''}</span>
-                              {userRanking && (
-                                <>
-                                  <span className="user-stat">📊 Moyenne: {userRanking.averagePercentage}%</span>
-                                  <span className="user-stat">⭐ Score Total: {userRanking.totalScore}</span>
-                                  {userRanking.cmmiLevelName && (
-                                    <span className="user-stat" style={{ color: userRanking.cmmiLevel > 0 ? CMMI_LEVELS[userRanking.cmmiLevel].color : '#94a3b8' }}>
-                                      🏆 {userRanking.cmmiLevelName}
-                                    </span>
-                                  )}
-                                </>
-                              )}
-                            </>
-                          ) : (
-                            <span className="user-stat no-scores-badge">⏳ Pas encore joué</span>
-                          )}
-                        </div>
-                        <div className="user-date">
-                          Inscrit le: {new Date(user.createdAt || Date.now()).toLocaleDateString('fr-FR')}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-                {allUsers.length === 0 && (
-                  <div className="no-data">Aucun utilisateur enregistré</div>
                 )}
               </div>
             </div>

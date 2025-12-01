@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminPanel from '../components/AdminPanel';
 import { QRCodeSVG } from 'qrcode.react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { FaQrcode, FaDownload, FaCopy, FaHome, FaChartBar } from 'react-icons/fa';
 import './AdminPage.css';
 
 const AdminPage = () => {
   const navigate = useNavigate();
-  const [showScores, setShowScores] = useState(false);
   const appUrl = 'https://cmmi-seven.vercel.app/';
 
   const handleDownloadQR = () => {
