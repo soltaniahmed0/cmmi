@@ -309,10 +309,12 @@ export const checkPlayerNameExists = async (playerName) => {
 };
 
 // Enregistrer un nouvel utilisateur (même s'il n'a pas encore joué)
+// Empêche 2 utilisateurs d'utiliser le même nom
 export const registerPlayer = async (playerName) => {
   if (!playerName || !playerName.trim()) return null;
 
   const trimmedName = playerName.trim();
+  const currentLocalName = localStorage.getItem('cmmi_player_name');
   
   // Si Firestore n'est pas configuré, utiliser localStorage
   if (!isFirestoreConfigured()) {
@@ -320,14 +322,20 @@ export const registerPlayer = async (playerName) => {
     
     // Vérifier si l'utilisateur existe déjà
     const existingUser = users.find(u => u.playerName.toLowerCase() === trimmedName.toLowerCase());
-    if (existingUser) {
-      // L'utilisateur existe déjà, mettre à jour lastActive
+    
+    // Si l'utilisateur existe ET ce n'est pas le même utilisateur actuel, rejeter
+    if (existingUser && currentLocalName !== trimmedName) {
+      throw new Error('Ce nom est déjà utilisé. Veuillez choisir un autre nom.');
+    }
+
+    // Si c'est le même utilisateur, juste mettre à jour
+    if (existingUser && currentLocalName === trimmedName) {
       existingUser.lastActive = new Date().toISOString();
       localStorage.setItem('cmmi_users', JSON.stringify(users));
-      localStorage.setItem('cmmi_player_name', trimmedName);
       return existingUser;
     }
 
+    // Nouvel utilisateur
     const newUser = {
       id: Date.now(),
       playerName: trimmedName,
@@ -352,14 +360,17 @@ export const registerPlayer = async (playerName) => {
       doc.data().playerName.toLowerCase() === trimmedName.toLowerCase()
     );
 
-    if (existingUserDoc) {
-      // L'utilisateur existe déjà, mettre à jour lastActive
+    // Si l'utilisateur existe ET ce n'est pas le même utilisateur actuel, rejeter
+    if (existingUserDoc && currentLocalName !== trimmedName) {
+      throw new Error('Ce nom est déjà utilisé. Veuillez choisir un autre nom.');
+    }
+
+    // Si c'est le même utilisateur, juste mettre à jour lastActive
+    if (existingUserDoc && currentLocalName === trimmedName) {
       const userRef = doc(db, 'users', existingUserDoc.id);
       await updateDoc(userRef, {
         lastActive: Timestamp.now()
       });
-      
-      localStorage.setItem('cmmi_player_name', trimmedName);
       
       return {
         id: existingUserDoc.id,
