@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { FaTrophy, FaMedal, FaAward, FaLock, FaUsers, FaChartBar } from 'react-icons/fa';
 import { getOverallRanking, clearAllScores, subscribeToScores } from '../utils/scoreManager';
 import { getPlayerCMMILevel, CMMI_LEVELS } from '../utils/gameLock';
@@ -7,6 +8,8 @@ import Top3Leaderboard from './Top3Leaderboard';
 import './AdminPanel.css';
 
 const AdminPanel = ({ onClose }) => {
+  // useNavigate est disponible car AdminPanel est toujours dans un Router maintenant
+  const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [allScores, setAllScores] = useState([]);
@@ -74,7 +77,12 @@ const AdminPanel = ({ onClose }) => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setPassword('');
-    if (onClose) onClose();
+    if (onClose) {
+      onClose();
+    } else if (navigate) {
+      // Si on est sur la page admin dédiée, rediriger vers la page d'accueil
+      navigate('/');
+    }
   };
 
   const handleClearScores = async () => {

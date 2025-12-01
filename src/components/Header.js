@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import './Header.css';
 
-const Header = ({ onAdminClick }) => {
+const Header = ({ onAdminClick, showAdminLink = true }) => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -78,7 +78,7 @@ const Header = ({ onAdminClick }) => {
           <button onClick={() => scrollToSection('level3-defined')}>🔵 Niveau 3: Defined</button>
           <button onClick={() => scrollToSection('level4-quantitatively-managed')}>🟣 Niveau 4: Quantitatively Managed</button>
           <button onClick={() => scrollToSection('level5-optimizing')}>🟢 Niveau 5: Optimizing</button>
-          {onAdminClick && (
+          {showAdminLink && onAdminClick && (
             <button 
               className="admin-btn" 
               onClick={handleAdminClick}

@@ -6,9 +6,11 @@
   "dependencies": {
     "firebase": "^12.6.0",
     "framer-motion": "^10.16.16",
+    "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.12.0",
+    "react-router-dom": "^7.9.6",
     "react-scripts": "5.0.1"
   },
   "scripts": {
