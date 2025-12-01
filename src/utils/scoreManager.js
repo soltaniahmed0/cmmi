@@ -63,13 +63,14 @@ export const saveScore = async (playerName, gameName, score, maxScore, timeSpent
 
   try {
     // S'assurer que l'utilisateur existe dans la collection users
+    // Récupérer tous les utilisateurs sans orderBy pour éviter les problèmes d'index
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, orderBy('playerName'));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(usersRef);
     
-    const existingUser = querySnapshot.docs.find(doc => 
-      doc.data().playerName.toLowerCase() === playerName.toLowerCase()
-    );
+    const existingUser = querySnapshot.docs.find(doc => {
+      const data = doc.data();
+      return data.playerName && data.playerName.toLowerCase() === playerName.toLowerCase();
+    });
 
     // Si l'utilisateur n'existe pas, le créer automatiquement
     if (!existingUser) {
@@ -130,15 +131,22 @@ export const getScores = async () => {
   }
 
   try {
+    // Récupérer tous les scores sans orderBy pour éviter les problèmes d'index
     const scoresRef = collection(db, 'scores');
-    const q = query(scoresRef, orderBy('date', 'desc'));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(scoresRef);
     
-    return querySnapshot.docs.map(doc => ({
+    const scores = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       date: doc.data().date?.toDate ? doc.data().date.toDate().toISOString() : doc.data().date
     }));
+    
+    // Trier côté client par date (descendant)
+    return scores.sort((a, b) => {
+      const dateA = new Date(a.date || 0);
+      const dateB = new Date(b.date || 0);
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error('Erreur lors de la récupération des scores depuis Firestore:', error);
     // Fallback sur localStorage en cas d'erreur
