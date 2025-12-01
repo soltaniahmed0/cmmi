@@ -18,20 +18,33 @@ let app = null;
 let db = null;
 
 try {
-  // Vérifier que les variables d'environnement sont définies
-  if (firebaseConfig.apiKey && 
-      firebaseConfig.projectId && 
-      firebaseConfig.apiKey !== 'your-api-key' && 
-      firebaseConfig.projectId !== 'your-project-id') {
+  // Vérifier que les variables d'environnement sont définies et valides
+  const hasValidConfig = firebaseConfig.apiKey && 
+                         firebaseConfig.projectId && 
+                         firebaseConfig.apiKey !== 'your-api-key' && 
+                         firebaseConfig.projectId !== 'your-project-id' &&
+                         firebaseConfig.apiKey !== undefined &&
+                         firebaseConfig.projectId !== undefined;
+
+  if (hasValidConfig) {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
-    console.log('Firebase initialisé avec succès');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Firebase initialisé avec succès');
+    }
   } else {
-    console.warn('Firebase n\'est pas configuré. Utilisation de localStorage.');
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('Firebase n\'est pas configuré. Utilisation de localStorage.');
+    }
   }
 } catch (error) {
-  console.error('Erreur lors de l\'initialisation de Firebase:', error);
+  // En production, ne pas logger les erreurs pour éviter les problèmes de build
+  if (process.env.NODE_ENV !== 'production') {
+    console.error('Erreur lors de l\'initialisation de Firebase:', error);
+  }
   // Continuer sans Firebase (fallback sur localStorage)
+  app = null;
+  db = null;
 }
 
 export { db };
