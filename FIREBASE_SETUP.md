@@ -45,6 +45,11 @@ service cloud.firestore {
     match /scores/{document=**} {
       allow read, write: if true;
     }
+    
+    // Permettre la lecture et écriture pour la collection users
+    match /users/{document=**} {
+      allow read, write: if true;
+    }
   }
 }
 ```
