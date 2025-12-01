@@ -16,6 +16,11 @@ import { db } from '../config/firebase';
 
 // Vérifier si Firestore est configuré (pas les valeurs par défaut)
 const isFirestoreConfigured = () => {
+  // Vérifier que db est initialisé
+  if (!db) {
+    return false;
+  }
+  
   const config = process.env;
   return config.REACT_APP_FIREBASE_PROJECT_ID && 
          config.REACT_APP_FIREBASE_PROJECT_ID !== 'your-project-id' &&
@@ -457,15 +462,47 @@ export const registerPlayer = async (playerName) => {
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', error);
     
-    // Message d'erreur plus explicite
-    if (error.code === 'permission-denied' || error.message?.includes('permission')) {
-      throw new Error('Permissions Firestore insuffisantes. Veuillez vérifier les règles de sécurité dans Firebase Console.');
-    } else if (error.code === 'unavailable') {
-      throw new Error('Firestore est temporairement indisponible. Veuillez réessayer plus tard.');
-    } else if (error.message?.includes('index')) {
-      throw new Error('Index Firestore manquant. Veuillez créer l\'index requis ou contacter l\'administrateur.');
+    // Si erreur de permissions ou autre erreur Firestore, utiliser localStorage comme fallback
+    if (error.code === 'permission-denied' || 
+        error.code === 'unavailable' || 
+        error.message?.includes('permission') ||
+        error.message?.includes('Firestore')) {
+      console.warn('Firestore non disponible, utilisation de localStorage comme fallback');
+      
+      // Utiliser localStorage comme fallback
+      const users = JSON.parse(localStorage.getItem('cmmi_users') || '[]');
+      
+      // Vérifier si l'utilisateur existe déjà
+      const existingUser = users.find(u => u.playerName.toLowerCase() === trimmedName.toLowerCase());
+      
+      // Si l'utilisateur existe ET ce n'est pas le même utilisateur actuel, rejeter
+      if (existingUser && currentLocalName !== trimmedName) {
+        throw new Error('Ce nom est déjà utilisé. Veuillez choisir un autre nom.');
+      }
+
+      // Si c'est le même utilisateur, juste mettre à jour
+      if (existingUser && currentLocalName === trimmedName) {
+        existingUser.lastActive = new Date().toISOString();
+        localStorage.setItem('cmmi_users', JSON.stringify(users));
+        return existingUser;
+      }
+
+      // Nouvel utilisateur
+      const newUser = {
+        id: Date.now(),
+        playerName: trimmedName,
+        createdAt: new Date().toISOString(),
+        lastActive: new Date().toISOString()
+      };
+
+      users.push(newUser);
+      localStorage.setItem('cmmi_users', JSON.stringify(users));
+      localStorage.setItem('cmmi_player_name', trimmedName);
+      window.dispatchEvent(new Event('userRegistered'));
+      return newUser;
     }
     
+    // Pour les autres erreurs, relancer
     throw error;
   }
 };
