@@ -157,9 +157,16 @@ const AdminPanel = ({ onClose }) => {
               </div>
             </div>
           </div>
-          <button className="admin-logout-btn" onClick={handleLogout}>
-            Déconnexion
-          </button>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            {onClose && (
+              <button className="admin-back-btn" onClick={onClose}>
+                ← Retour au QR Code
+              </button>
+            )}
+            <button className="admin-logout-btn" onClick={handleLogout}>
+              Déconnexion
+            </button>
+          </div>
         </div>
 
         <div className="admin-tabs">

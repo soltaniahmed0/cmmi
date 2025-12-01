@@ -53,12 +53,60 @@
   font-size: 1.1rem;
 }
 
+.admin-navigation {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 2rem auto;
+  max-width: 1400px;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.6);
+  color: #94a3b8;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #ffffff;
+}
+
+.nav-btn.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 5px 20px rgba(59, 130, 246, 0.3);
+}
+
 .admin-page-content {
   max-width: 1400px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 400px 1fr;
-  gap: 2rem;
+}
+
+.admin-page-content.qr-view {
+  display: flex;
+  justify-content: center;
+}
+
+.admin-page-content.scores-view {
+  width: 100%;
+}
+
+.qr-code-section-full {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .qr-code-section {
@@ -105,7 +153,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1.5rem;
+  padding: 2rem;
   background: #ffffff;
   border-radius: 15px;
   margin-bottom: 2rem;
@@ -176,6 +224,12 @@
 .download-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
+}
+
+.admin-panel-section-full {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .admin-panel-section {
