@@ -88,30 +88,6 @@ const Level1Initial = () => {
       ],
       correct: 1,
       explanation: 'CMMI peut être appliqué dans plusieurs domaines : développement logiciel, services, et acquisition.'
-    },
-    {
-      id: 6,
-      question: 'Quel avantage apporte CMMI aux étudiants ?',
-      options: [
-        'Réduction des coûts',
-        'Amélioration des compétences et opportunités de carrière',
-        'Augmentation de la productivité uniquement',
-        'Aucun avantage'
-      ],
-      correct: 1,
-      explanation: 'CMMI améliore les compétences professionnelles et ouvre de nombreuses opportunités de carrière dans des entreprises de premier plan.'
-    },
-    {
-      id: 7,
-      question: 'Le Niveau 1 est-il considéré comme un niveau de maturité élevé ?',
-      options: [
-        'Oui, c\'est le meilleur niveau',
-        'Non, c\'est le niveau de base',
-        'Cela dépend de l\'organisation',
-        'C\'est un niveau intermédiaire'
-      ],
-      correct: 1,
-      explanation: 'Le Niveau 1 est le niveau de base où les processus sont imprévisibles. C\'est le point de départ de l\'amélioration.'
     }
   ];
 

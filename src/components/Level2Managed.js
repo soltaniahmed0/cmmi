@@ -60,42 +60,6 @@ const Level2Managed = () => {
     },
     {
       id: 5,
-      question: 'Au niveau 2, les processus sont :',
-      options: [
-        'Improvisés pour chaque projet',
-        'Documentés et établis au niveau du projet',
-        'Non définis',
-        'Identiques pour tous les projets sans exception'
-      ],
-      correct: 1,
-      explanation: 'Au niveau 2, les processus sont documentés et établis au niveau du projet.'
-    },
-    {
-      id: 6,
-      question: 'Quel est le rôle du suivi et contrôle de projet au niveau 2 ?',
-      options: [
-        'Ne pas suivre le projet',
-        'Surveiller l\'avancement et prendre des actions correctives si nécessaire',
-        'Laisser le projet se développer seul',
-        'Contrôler uniquement le budget'
-      ],
-      correct: 1,
-      explanation: 'Le suivi et contrôle permet de surveiller l\'avancement et de prendre des actions correctives.'
-    },
-    {
-      id: 7,
-      question: 'Au niveau 2, comment sont gérés les fournisseurs ?',
-      options: [
-        'Ils ne sont pas gérés',
-        'Les accords sont établis et suivis',
-        'On fait confiance sans vérification',
-        'On change de fournisseurs fréquemment'
-      ],
-      correct: 1,
-      explanation: 'Au niveau 2, les accords avec les fournisseurs sont établis et suivis.'
-    },
-    {
-      id: 8,
       question: 'Qu\'est-ce qui distingue le niveau 2 du niveau 1 ?',
       options: [
         'Rien, ils sont identiques',
