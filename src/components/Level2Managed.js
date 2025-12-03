@@ -1,21 +1,115 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCheckCircle, FaTimesCircle, FaTrophy, FaLock, FaProjectDiagram } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaTrophy, FaLock, FaClipboardList } from 'react-icons/fa';
 import { saveScore, getPlayerName } from '../utils/scoreManager';
-import { isGameLocked, CMMI_LEVELS } from '../utils/gameLock';
+import { isGameLocked } from '../utils/gameLock';
 import Top3Leaderboard from './Top3Leaderboard';
 import ParticleEffect from './ParticleEffect';
 import GameTimer from './GameTimer';
 import './Level2Managed.css';
 
 const Level2Managed = () => {
-  const [projects, setProjects] = useState([
-    { id: 1, name: 'Projet Alpha', tasks: ['Planification', 'Exécution', 'Suivi'], completed: [] },
-    { id: 2, name: 'Projet Beta', tasks: ['Planification', 'Exécution', 'Contrôle'], completed: [] },
-    { id: 3, name: 'Projet Gamma', tasks: ['Planification', 'Exécution', 'Mesure'], completed: [] }
-  ]);
-  
-  const [currentProject, setCurrentProject] = useState(0);
+  const questions = [
+    {
+      id: 1,
+      question: 'Au niveau 2 CMMI, quel est l\'objectif principal de la gestion de projet ?',
+      options: [
+        'Développer rapidement sans planification',
+        'Gérer les projets de manière contrôlée avec des processus documentés',
+        'Improviser selon les besoins du moment',
+        'Se concentrer uniquement sur le code'
+      ],
+      correct: 1,
+      explanation: 'Au niveau 2 (Managed), les projets sont gérés de manière contrôlée avec des processus documentés et établis.'
+    },
+    {
+      id: 2,
+      question: 'Quelle pratique est essentielle au niveau 2 CMMI ?',
+      options: [
+        'Planification de projet',
+        'Optimisation continue',
+        'Innovation aléatoire',
+        'Aucune documentation'
+      ],
+      correct: 0,
+      explanation: 'La planification de projet est une pratique fondamentale du niveau 2 Managed.'
+    },
+    {
+      id: 3,
+      question: 'Au niveau 2, comment sont gérées les exigences ?',
+      options: [
+        'Elles ne sont pas documentées',
+        'Elles sont gérées et tracées de manière contrôlée',
+        'Elles changent librement sans contrôle',
+        'Elles sont ignorées'
+      ],
+      correct: 1,
+      explanation: 'Au niveau 2, les exigences sont gérées et tracées de manière contrôlée.'
+    },
+    {
+      id: 4,
+      question: 'Qu\'est-ce que la "mesure et analyse" au niveau 2 ?',
+      options: [
+        'Ignorer les métriques',
+        'Collecter et analyser des données pour comprendre la performance du projet',
+        'Mesurer uniquement le temps',
+        'Ne rien mesurer'
+      ],
+      correct: 1,
+      explanation: 'La mesure et analyse permet de collecter et analyser des données pour comprendre la performance.'
+    },
+    {
+      id: 5,
+      question: 'Au niveau 2, les processus sont :',
+      options: [
+        'Improvisés pour chaque projet',
+        'Documentés et établis au niveau du projet',
+        'Non définis',
+        'Identiques pour tous les projets sans exception'
+      ],
+      correct: 1,
+      explanation: 'Au niveau 2, les processus sont documentés et établis au niveau du projet.'
+    },
+    {
+      id: 6,
+      question: 'Quel est le rôle du suivi et contrôle de projet au niveau 2 ?',
+      options: [
+        'Ne pas suivre le projet',
+        'Surveiller l\'avancement et prendre des actions correctives si nécessaire',
+        'Laisser le projet se développer seul',
+        'Contrôler uniquement le budget'
+      ],
+      correct: 1,
+      explanation: 'Le suivi et contrôle permet de surveiller l\'avancement et de prendre des actions correctives.'
+    },
+    {
+      id: 7,
+      question: 'Au niveau 2, comment sont gérés les fournisseurs ?',
+      options: [
+        'Ils ne sont pas gérés',
+        'Les accords sont établis et suivis',
+        'On fait confiance sans vérification',
+        'On change de fournisseurs fréquemment'
+      ],
+      correct: 1,
+      explanation: 'Au niveau 2, les accords avec les fournisseurs sont établis et suivis.'
+    },
+    {
+      id: 8,
+      question: 'Qu\'est-ce qui distingue le niveau 2 du niveau 1 ?',
+      options: [
+        'Rien, ils sont identiques',
+        'Le niveau 2 introduit la gestion de projet contrôlée et des processus documentés',
+        'Le niveau 2 supprime toute planification',
+        'Le niveau 2 est moins structuré'
+      ],
+      correct: 1,
+      explanation: 'Le niveau 2 introduit la gestion de projet contrôlée et des processus documentés, contrairement au niveau 1 qui est chaotique.'
+    }
+  ];
+
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState({});
   const [score, setScore] = useState(0);
   const [gameComplete, setGameComplete] = useState(false);
   const [showTop3, setShowTop3] = useState(false);
@@ -23,6 +117,7 @@ const Level2Managed = () => {
   const [particleTrigger, setParticleTrigger] = useState(0);
   const [timeUp, setTimeUp] = useState(false);
   const [gameActive, setGameActive] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
 
   React.useEffect(() => {
     const updateLockStatus = async () => {
@@ -33,7 +128,6 @@ const Level2Managed = () => {
     
     updateLockStatus();
     
-    // Écouter les événements de mise à jour des scores
     window.addEventListener('scoreUpdated', updateLockStatus);
     window.addEventListener('storage', updateLockStatus);
     
@@ -43,23 +137,27 @@ const Level2Managed = () => {
     };
   }, []);
 
-  const processOrder = ['Planification', 'Exécution', 'Suivi', 'Contrôle', 'Mesure'];
-  const correctSequence = ['Planification', 'Exécution', 'Suivi'];
-
   const handleTimeUp = () => {
     setTimeUp(true);
     setGameActive(false);
-    // Calculer le score final avec les projets actuels
-    const finalScore = projects.filter(p => {
-      const correctOrder = correctSequence.filter(t => p.tasks.includes(t));
-      return p.completed.length === correctOrder.length &&
-             correctOrder.every((t, idx) => p.completed[idx] === t);
-    }).length;
     
+    let correctCount = 0;
+    questions.forEach((q) => {
+      if (selectedAnswers[q.id] === q.correct) {
+        correctCount++;
+      }
+    });
+    
+    setScore(correctCount);
     setGameComplete(true);
+    
+    if (correctCount >= questions.length * 0.7) {
+      setParticleTrigger(prev => prev + 1);
+    }
+    
     const playerName = getPlayerName();
     if (playerName) {
-      saveScore(playerName, 'Niveau 2: Managed', finalScore, projects.length).catch(err => 
+      saveScore(playerName, 'Niveau 2: Managed', correctCount, questions.length).catch(err => 
         console.error('Erreur lors de la sauvegarde du score:', err)
       );
     }
@@ -68,65 +166,59 @@ const Level2Managed = () => {
   const startGame = () => {
     setGameActive(true);
     setTimeUp(false);
-    setProjects([
-      { id: 1, name: 'Projet Alpha', tasks: ['Planification', 'Exécution', 'Suivi'], completed: [] },
-      { id: 2, name: 'Projet Beta', tasks: ['Planification', 'Exécution', 'Contrôle'], completed: [] },
-      { id: 3, name: 'Projet Gamma', tasks: ['Planification', 'Exécution', 'Mesure'], completed: [] }
-    ]);
-    setCurrentProject(0);
-    setScore(0);
+    setSelectedAnswers({});
     setGameComplete(false);
+    setScore(0);
+    setCurrentQuestion(0);
+    setShowExplanation(false);
   };
 
-  const handleTaskComplete = (projectId, task) => {
-    if (!gameActive || timeUp) return;
-
-    const project = projects.find(p => p.id === projectId);
-    if (!project || project.completed.includes(task)) return;
-
-    const updatedProjects = projects.map(p => {
-      if (p.id === projectId) {
-        const newCompleted = [...p.completed, task];
-        // Vérifier si les tâches sont dans le bon ordre
-        const correctOrder = correctSequence.filter(t => p.tasks.includes(t));
-        const isCorrect = correctOrder.every((t, idx) => newCompleted[idx] === t);
-        
-        if (isCorrect && newCompleted.length === correctOrder.length) {
-          setParticleTrigger(prev => prev + 1);
-          setScore(prev => prev + 1);
-        }
-        
-        return { ...p, completed: newCompleted };
-      }
-      return p;
+  const handleAnswer = (questionId, answerIndex) => {
+    if (!gameActive || timeUp || gameComplete || showExplanation) return;
+    
+    setSelectedAnswers({
+      ...selectedAnswers,
+      [questionId]: answerIndex
     });
-
-    setProjects(updatedProjects);
-
-    // Vérifier si tous les projets sont complétés
-    const allCompleted = updatedProjects.every(p => 
-      p.completed.length === p.tasks.length
-    );
-
-    if (allCompleted) {
-      setTimeout(() => {
-        calculateFinalScore();
-      }, 1000);
+    
+    // Afficher l'explication
+    setShowExplanation(true);
+    
+    // Vérifier si la réponse est correcte
+    const question = questions.find(q => q.id === questionId);
+    if (question && answerIndex === question.correct) {
+      setParticleTrigger(prev => prev + 1);
     }
+    
+    // Passer à la question suivante après un délai
+    setTimeout(() => {
+      setShowExplanation(false);
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+      } else {
+        submitQuiz();
+      }
+    }, 2000);
   };
 
-  const calculateFinalScore = () => {
+  const submitQuiz = () => {
     setGameActive(false);
+    let correctCount = 0;
+    questions.forEach((q) => {
+      if (selectedAnswers[q.id] === q.correct) {
+        correctCount++;
+      }
+    });
+    setScore(correctCount);
     setGameComplete(true);
+    
+    if (correctCount >= questions.length * 0.7) {
+      setParticleTrigger(prev => prev + 1);
+    }
+    
     const playerName = getPlayerName();
     if (playerName) {
-      // Calculer le score final basé sur l'état actuel des projets
-      const finalScore = projects.filter(p => {
-        const correctOrder = correctSequence.filter(t => p.tasks.includes(t));
-        return p.completed.length === correctOrder.length &&
-               correctOrder.every((t, idx) => p.completed[idx] === t);
-      }).length;
-      saveScore(playerName, 'Niveau 2: Managed', finalScore, projects.length).catch(err => 
+      saveScore(playerName, 'Niveau 2: Managed', correctCount, questions.length).catch(err => 
         console.error('Erreur lors de la sauvegarde du score:', err)
       );
     }
@@ -137,12 +229,9 @@ const Level2Managed = () => {
     setGameComplete(false);
     setTimeUp(false);
     setGameActive(false);
-    setCurrentProject(0);
-    setProjects([
-      { id: 1, name: 'Projet Alpha', tasks: ['Planification', 'Exécution', 'Suivi'], completed: [] },
-      { id: 2, name: 'Projet Beta', tasks: ['Planification', 'Exécution', 'Contrôle'], completed: [] },
-      { id: 3, name: 'Projet Gamma', tasks: ['Planification', 'Exécution', 'Mesure'], completed: [] }
-    ]);
+    setCurrentQuestion(0);
+    setSelectedAnswers({});
+    setShowExplanation(false);
   };
 
   if (isLocked) {
@@ -168,8 +257,6 @@ const Level2Managed = () => {
     );
   }
 
-  const currentProjectData = projects[currentProject];
-
   return (
     <section id="level2-managed" className="level2-section">
       <ParticleEffect trigger={particleTrigger} type="confetti" />
@@ -177,7 +264,7 @@ const Level2Managed = () => {
         <div className="game-header">
           <h2 className="game-title">Niveau 2: Managed - Gestion de Projet</h2>
           <p className="game-description">
-            Gérez les projets ! Organisez les processus dans le bon ordre pour chaque projet
+            Testez vos connaissances sur la gestion contrôlée de projet au niveau 2 CMMI
           </p>
         </div>
 
@@ -187,8 +274,8 @@ const Level2Managed = () => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <FaProjectDiagram className="start-icon" />
-            <p>Gérez {projects.length} projets en 3 minutes !</p>
+            <FaClipboardList className="start-icon" />
+            <p>Vous avez 3 minutes pour répondre à {questions.length} questions !</p>
             <button className="start-btn" onClick={startGame}>
               🚀 Commencer
             </button>
@@ -201,58 +288,63 @@ const Level2Managed = () => {
             animate={{ opacity: 1 }}
             className="game-content"
           >
-            <div className="game-stats-bar">
+            <div className="quiz-header">
               <GameTimer 
                 initialTime={180}
                 onTimeUp={handleTimeUp}
                 gameActive={gameActive && !gameComplete}
               />
-              <div className="score-badge">Score: <strong>{score}/{projects.length}</strong></div>
-              <div className="project-indicator">
-                Projet {currentProject + 1} / {projects.length}
+              <div className="progress-indicator">
+                Question {currentQuestion + 1} / {questions.length}
               </div>
             </div>
 
-            <div className="projects-container">
-              {projects.map((project, index) => (
+            <motion.div
+              key={currentQuestion}
+              className="question-card"
+              initial={{ x: 300, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -300, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+            >
+              <h3 className="question-text">{questions[currentQuestion].question}</h3>
+              
+              <div className="options-grid">
+                {questions[currentQuestion].options.map((option, index) => {
+                  const isSelected = selectedAnswers[questions[currentQuestion].id] === index;
+                  const isCorrect = index === questions[currentQuestion].correct;
+                  const showResult = showExplanation && isSelected;
+                  
+                  return (
+                    <motion.button
+                      key={index}
+                      className={`option-btn ${isSelected ? 'selected' : ''} ${showResult ? (isCorrect ? 'correct' : 'incorrect') : ''}`}
+                      onClick={() => handleAnswer(questions[currentQuestion].id, index)}
+                      whileHover={{ scale: 1.05, y: -3 }}
+                      whileTap={{ scale: 0.95 }}
+                      disabled={timeUp || showExplanation}
+                    >
+                      {showResult && (
+                        <span className="result-icon">
+                          {isCorrect ? <FaCheckCircle /> : <FaTimesCircle />}
+                        </span>
+                      )}
+                      {option}
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              {showExplanation && (
                 <motion.div
-                  key={project.id}
-                  className={`project-card ${index === currentProject ? 'active' : ''}`}
-                  onClick={() => setCurrentProject(index)}
-                  whileHover={{ scale: 1.02 }}
+                  className="explanation-box"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
                 >
-                  <h3 className="project-name">{project.name}</h3>
-                  <div className="tasks-container">
-                    {project.tasks.map((task, taskIndex) => {
-                      const isCompleted = project.completed.includes(task);
-                      const isClickable = !isCompleted && 
-                        (project.completed.length === 0 || 
-                         processOrder.indexOf(task) > processOrder.indexOf(project.completed[project.completed.length - 1]));
-                      
-                      return (
-                        <motion.button
-                          key={taskIndex}
-                          className={`task-btn ${isCompleted ? 'completed' : ''} ${isClickable ? 'clickable' : ''}`}
-                          onClick={() => handleTaskComplete(project.id, task)}
-                          disabled={!isClickable || !gameActive || timeUp || index !== currentProject}
-                          whileHover={isClickable ? { scale: 1.1, y: -5 } : {}}
-                          whileTap={isClickable ? { scale: 0.95 } : {}}
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: taskIndex * 0.1, type: 'spring' }}
-                        >
-                          {isCompleted ? <FaCheckCircle /> : <span className="task-number">{taskIndex + 1}</span>}
-                          <span>{task}</span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
+                  <p>{questions[currentQuestion].explanation}</p>
                 </motion.div>
-              ))}
-            </div>
+              )}
+            </motion.div>
           </motion.div>
         )}
 
@@ -263,12 +355,19 @@ const Level2Managed = () => {
             animate={{ opacity: 1, scale: 1 }}
           >
             <FaTrophy className="trophy-icon" />
-            <h2>Gestion Terminée !</h2>
+            <h2>Quiz Terminé !</h2>
             <div className="score-display">
-              <div className="score-value">{score} / {projects.length}</div>
+              <div className="score-value">{score} / {questions.length}</div>
               <div className="score-percentage">
-                {Math.round((score / projects.length) * 100)}%
+                {Math.round((score / questions.length) * 100)}%
               </div>
+            </div>
+            <div className="result-message">
+              {score >= questions.length * 0.7 ? (
+                <p className="success-message">🎉 Excellent ! Vous maîtrisez la gestion de projet !</p>
+              ) : (
+                <p className="encourage-message">💪 Continuez à apprendre, vous y êtes presque !</p>
+              )}
             </div>
             <div className="result-buttons">
               <button className="replay-btn" onClick={resetGame}>
@@ -293,4 +392,3 @@ const Level2Managed = () => {
 };
 
 export default Level2Managed;
-
